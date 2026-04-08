@@ -14,13 +14,13 @@
 
 A premium, ultra-modern Progressive Web App for generating optimized AI prompts. Built with Next.js 16, featuring kinetic typography, glassmorphism, and liquid gradients.
 
-[🚀 Live Demo](#) · [📸 Screenshots](#screenshots) · [⚡ Features](#features) · [🛠 Installation](#installation)
+[🚀 Live Demo](https://marktantongco.github.io/marky-prompt-system/) · [📸 Screenshots](#screenshots) · [⚡ Features](#features) · [🛠 Installation](#installation)
 
 </div>
 
 ---
 
-## ✨ Features
+## ⚡ Features
 
 ### 🎯 Core Functionality
 
@@ -70,9 +70,9 @@ Built with the **8-Layer Prompt Architecture** from promptc OS:
 
 <div align="center">
 
-| Main Interface | History Panel | Tooltip Modal |
-|:--------------:|:-------------:|:-------------:|
-| ![Main](screenshots/main.png) | ![History](screenshots/history.png) | ![Tooltip](screenshots/tooltip.png) |
+| Main Interface | History Panel | Copy Mode |
+|:--------------:|:-------------:|:---------:|
+| ![Main Interface showing dark mode with gold accents, kinetic typography logo, and glassmorphism cards](https://via.placeholder.com/200x400/050505/f5c518?text=Main+UI) | ![History Panel with saved prompts and favorites](https://via.placeholder.com/200x400/050505/f5c518?text=History) | ![Copywriting mode with tone selection](https://via.placeholder.com/200x400/050505/f5c518?text=Copy+Mode) |
 
 </div>
 
