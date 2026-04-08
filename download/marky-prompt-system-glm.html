@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARKY PROMPT SYSTEM — GLM Edition</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #242424;
+    --accent: #f5c518;
+    --accent2: #ff6b35;
+    --text: #e8e8e8;
+    --muted: #555;
+    --success: #22c55e;
+    --tooltip-bg: #1c1c1c;
+    --tooltip-border: #2c2c2c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,197,24,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,197,24,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 36px 20px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 3px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .tagline {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 4px;
+  }
+
+  .version-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    align-self: flex-start;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  /* ── TASK FRONT & CENTER ── */
+  .task-section {
+    margin-bottom: 36px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+  }
+
+  .task-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 12px 12px 0 0;
+  }
+
+  .task-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .task-label-main {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .task-optional {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .task-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .task-input::placeholder { color: #333; }
+  .task-input:focus { border-color: var(--accent); }
+
+  .task-hint {
+    font-size: 11px;
+    color: #383838;
+    margin-top: 7px;
+  }
+
+  /* ── MODE TOGGLE ── */
+  .mode-section { margin-bottom: 28px; }
+
+  .mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .mode-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 14px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .mode-btn.active { background: var(--surface2); border-color: var(--accent); color: var(--text); }
+  .mode-btn.active::before { opacity: 1; }
+
+  .mode-btn-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .mode-btn-desc { font-size: 11.5px; line-height: 1.5; color: var(--muted); }
+  .mode-btn.active .mode-btn-desc { color: #888; }
+
+  /* ── VARIANT SECTION ── */
+  .sub-section {
+    margin-bottom: 28px;
+    transition: opacity 0.22s, max-height 0.22s;
+    overflow: hidden;
+  }
+
+  .sub-section.hidden {
+    opacity: 0;
+    pointer-events: none;
+    max-height: 0;
+    margin: 0;
+  }
+
+  .variant-row,
+  .tone-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* ── VARIANT BUTTON WRAP ── */
+  .variant-wrap,
+  .tone-wrap {
+    flex: 1;
+    position: relative;
+  }
+
+  /* ── VARIANT BUTTON ── */
+  .variant-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 0 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .variant-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .variant-btn.active { background: var(--surface2); border-color: var(--accent); color: var(--text); }
+  .variant-btn.active::before { opacity: 1; }
+
+  .variant-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    line-height: 1;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+
+  .variant-btn.active .variant-num { color: var(--accent); }
+
+  .variant-word {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* ── TONE ICON BUTTON ── */
+  .tone-icon-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 12px 8px 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tone-icon-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .tone-icon-btn.active { background: var(--surface2); border-color: var(--accent2); }
+  .tone-icon-btn.active::before { opacity: 1; }
+
+  .tone-emoji { font-size: 22px; line-height: 1; }
+
+  .tone-label {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+
+  .tone-icon-btn.active .tone-label { color: var(--text); }
+
+  /* ── SHARED TOOLTIP ── */
+  .v-tooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--tooltip-bg);
+    border: 1px solid var(--tooltip-border);
+    border-radius: 10px;
+    padding: 15px 17px;
+    width: clamp(210px, 60vw, 300px);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+  }
+
+  .v-tooltip.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Edge-aware: first child always anchors left */
+  .variant-wrap:first-child .v-tooltip,
+  .tone-wrap:first-child .v-tooltip {
+    left: 0;
+    transform: translateX(0) translateY(8px);
+  }
+
+  .variant-wrap:first-child .v-tooltip.open,
+  .tone-wrap:first-child .v-tooltip.open {
+    transform: translateX(0) translateY(0);
+  }
+
+  /* Edge-aware: last child always anchors right */
+  .variant-wrap:last-child .v-tooltip,
+  .tone-wrap:last-child .v-tooltip {
+    left: auto;
+    right: 0;
+    transform: translateX(0) translateY(8px);
+  }
+
+  .variant-wrap:last-child .v-tooltip.open,
+  .tone-wrap:last-child .v-tooltip.open {
+    transform: translateX(0) translateY(0);
+  }
+
+  /* Arrow */
+  .v-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 10px; height: 10px;
+    background: var(--tooltip-bg);
+    border-right: 1px solid var(--tooltip-border);
+    border-bottom: 1px solid var(--tooltip-border);
+  }
+
+  .variant-wrap:first-child .v-tooltip::after,
+  .tone-wrap:first-child .v-tooltip::after {
+    left: 24px;
+    transform: rotate(45deg);
+  }
+
+  .variant-wrap:last-child .v-tooltip::after,
+  .tone-wrap:last-child .v-tooltip::after {
+    left: auto;
+    right: 18px;
+    transform: rotate(45deg);
+  }
+
+  .tt-badge {
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tt-body {
+    font-size: 11.5px;
+    line-height: 1.65;
+    color: #888;
+  }
+
+  .tt-body strong { color: var(--text); font-weight: 600; }
+
+  .tt-tag {
+    display: inline-block;
+    margin-top: 9px;
+    font-size: 9.5px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.2);
+    padding: 3px 7px;
+    border-radius: 4px;
+  }
+
+  /* ── OUTPUT ── */
+  .output-section { margin-bottom: 18px; }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .char-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .output-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 22px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #aaa;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 240px;
+    max-height: 400px;
+    overflow-y: auto;
+    transition: border-color 0.2s;
+  }
+
+  .output-box:hover { border-color: #2e2e2e; }
+
+  /* ── COPY BUTTON ── */
+  .copy-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    border: none;
+    color: #000;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .copy-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(245,197,24,0.22); }
+  .copy-btn:active { transform: none; }
+  .copy-btn.copied { background: linear-gradient(135deg, var(--success), #16a34a); }
+
+  /* ── TIPS ── */
+  .tips-section {
+    margin-top: 36px;
+    padding-top: 26px;
+    border-top: 1px solid var(--border);
+  }
+
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .tip-lbl {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .tip-text { font-size: 11.5px; color: var(--muted); line-height: 1.6; }
+
+  /* FLASH */
+  @keyframes flash {
+    0%   { background: rgba(245,197,24,0.06); }
+    100% { background: var(--surface); }
+  }
+  .flash { animation: flash 0.35s ease; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* MOBILE */
+  @media (max-width: 600px) {
+    .logo { font-size: 26px; }
+    .mode-toggle { grid-template-columns: 1fr; }
+    .tips-grid { grid-template-columns: 1fr; }
+    .v-tooltip {
+      width: calc(100vw - 44px);
+    }
+    /* on mobile, clamp all tooltips to viewport */
+    .variant-wrap .v-tooltip,
+    .tone-wrap .v-tooltip {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%) translateY(8px);
+    }
+    .variant-wrap .v-tooltip.open,
+    .tone-wrap .v-tooltip.open {
+      transform: translateX(-50%) translateY(0);
+    }
+    .variant-wrap:first-child .v-tooltip,
+    .tone-wrap:first-child .v-tooltip {
+      left: -10px;
+      transform: translateX(0) translateY(8px);
+    }
+    .variant-wrap:first-child .v-tooltip.open,
+    .tone-wrap:first-child .v-tooltip.open {
+      transform: translateX(0) translateY(0);
+    }
+    .variant-wrap:last-child .v-tooltip,
+    .tone-wrap:last-child .v-tooltip {
+      left: auto;
+      right: -10px;
+      transform: translateX(0) translateY(8px);
+    }
+    .variant-wrap:last-child .v-tooltip.open,
+    .tone-wrap:last-child .v-tooltip.open {
+      transform: translateX(0) translateY(0);
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <div class="logo">MARKY PROMPT SYSTEM</div>
+      <div class="tagline">@markytanky · AI Prompt Builder — GLM Edition</div>
+    </div>
+    <div class="version-badge">v3.3-GLM</div>
+  </header>
+
+  <!-- ① TASK — FRONT & CENTER -->
+  <div class="task-section">
+    <div class="task-label-row">
+      <span class="task-label-main">What's your task?</span>
+      <span class="task-optional">Optional</span>
+    </div>
+    <textarea class="task-input" id="task-input"
+      placeholder="Type your task here — appended to the prompt when you copy.&#10;e.g. &quot;Write a caption for my Pacific Cross post about health coverage&quot;"></textarea>
+    <div class="task-hint">Leave blank to copy the base prompt only.</div>
+  </div>
+
+  <!-- ② MODE -->
+  <div class="mode-section">
+    <div class="section-label">01 — Mode</div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" onclick="setMode('base')" id="btn-base">
+        <span class="mode-btn-title">⚡ Base Mode</span>
+        <span class="mode-btn-desc">Strategy, code, research, planning.</span>
+      </button>
+      <button class="mode-btn" onclick="setMode('copy')" id="btn-copy">
+        <span class="mode-btn-title">✍️ Copywriting Mode</span>
+        <span class="mode-btn-desc">Captions, emails, sales, persuasion.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ③a BASE VARIANTS -->
+  <div class="sub-section" id="variant-section">
+    <div class="section-label">02 — Variant <span style="color:#333;font-size:9px">· click to preview details</span></div>
+    <div class="variant-row">
+
+      <div class="variant-wrap">
+        <button class="variant-btn active" id="var-master" onclick="handleVariant(event,'master')">
+          <span class="variant-num">1</span>
+          <span class="variant-word">Master</span>
+        </button>
+        <div class="v-tooltip" id="tt-master">
+          <span class="tt-badge">1 · Master</span>
+          <div class="tt-body">
+            <strong>Full structured ruleset.</strong> Named sections — Core Rules, Advocacy, Writing Style, Skills. Every instruction clearly labelled and numbered.<br><br>
+            Best when you want GLM to follow a detailed operating framework without missing a single rule.<br><br>
+            <span class="tt-tag">Most Explicit</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="variant-wrap">
+        <button class="variant-btn" id="var-glm" onclick="handleVariant(event,'glm')">
+          <span class="variant-num">2</span>
+          <span class="variant-word">GLM</span>
+        </button>
+        <div class="v-tooltip" id="tt-glm">
+          <span class="tt-badge">2 · GLM Native</span>
+          <div class="tt-body">
+            <strong>Optimized for GLM's reasoning architecture.</strong> Same rules — different framing. Language that aligns with how GLM processes context and generates responses.<br><br>
+            Best for nuanced tasks, creative work, or when you want responses that leverage GLM's strengths in understanding and generation.<br><br>
+            <span class="tt-tag">Most Natural</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="variant-wrap">
+        <button class="variant-btn" id="var-concise" onclick="handleVariant(event,'concise')">
+          <span class="variant-num">3</span>
+          <span class="variant-word">Concise</span>
+        </button>
+        <div class="v-tooltip" id="tt-concise">
+          <span class="tt-badge">3 · Concise</span>
+          <div class="tt-body">
+            <strong>Stripped to essentials.</strong> Shortest token count. Same core behavior — zero padding. GLM reads it instantly and applies it without friction.<br><br>
+            Best for quick tasks, repeated use, or when you're token-conscious.<br><br>
+            <span class="tt-tag">Fastest</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ③b TONE (copy mode) -->
+  <div class="sub-section hidden" id="tone-section">
+    <div class="section-label">02 — Tone <span style="color:#333;font-size:9px">· click to preview details</span></div>
+    <div class="tone-row">
+
+      <div class="tone-wrap">
+        <button class="tone-icon-btn active" id="tone-faith" onclick="handleTone(event,'faith')">
+          <span class="tone-emoji">🙏</span>
+          <span class="tone-label">Faith</span>
+        </button>
+        <div class="v-tooltip" id="tt-faith">
+          <span class="tt-badge">🙏 Faith & Empowerment</span>
+          <div class="tt-body">
+            <strong>Warm. Conviction-driven. Hopeful.</strong><br><br>
+            For @markytanky — spiritual community, breakthrough messaging, motivational content.<br><br>
+            Leads with belief. Ends with invitation. Never preachy — always personal.<br><br>
+            <span class="tt-tag">@markytanky</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tone-wrap">
+        <button class="tone-icon-btn" id="tone-insurance" onclick="handleTone(event,'insurance')">
+          <span class="tone-emoji">🛡️</span>
+          <span class="tone-label">Insurance</span>
+        </button>
+        <div class="v-tooltip" id="tt-insurance">
+          <span class="tt-badge">🛡️ Insurance Sales</span>
+          <div class="tt-body">
+            <strong>Trust-first. Calm urgency. Protective.</strong><br><br>
+            For Pacific Cross content — IC Philippines compliant. No financial promises. Protection framed as care, not fear.<br><br>
+            Positions you as an advocate — not a salesperson.<br><br>
+            <span class="tt-tag">Pacific Cross · IC PH</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tone-wrap">
+        <button class="tone-icon-btn" id="tone-personal" onclick="handleTone(event,'personal')">
+          <span class="tone-emoji">🎯</span>
+          <span class="tone-label">Brand</span>
+        </button>
+        <div class="v-tooltip" id="tt-personal">
+          <span class="tt-badge">🎯 Personal Brand</span>
+          <div class="tt-body">
+            <strong>Direct. Honest. Story-led.</strong><br><br>
+            For LinkedIn and thought leadership — share the lesson not just the win. Use specific numbers and dates. Be vulnerable.<br><br>
+            Builds credibility through truth, not polish.<br><br>
+            <span class="tt-tag">LinkedIn · Substack</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ④ OUTPUT -->
+  <div class="output-section">
+    <div class="output-header">
+      <div class="section-label" style="margin:0">03 — Prompt Preview</div>
+      <div class="char-count" id="char-count">— chars</div>
+    </div>
+    <div class="output-box" id="output"></div>
+  </div>
+
+  <!-- ⑤ COPY -->
+  <button class="copy-btn" onclick="copyPrompt()" id="copy-btn">
+    <span>⎘</span><span id="copy-label">COPY PROMPT</span>
+  </button>
+
+  <!-- TIPS -->
+  <div class="tips-section">
+    <div class="section-label">Quick Reference</div>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-lbl">Base Mode</div>
+        <div class="tip-text">Code · Strategy · Research · Planning · Analysis</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-lbl">Copywriting Mode</div>
+        <div class="tip-text">Captions · Emails · Sales posts · CTAs · Hooks</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-lbl">Pro Tip</div>
+        <div class="tip-text">Paste at the top of a new GLM chat. Add your task below the last line.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentMode    = 'base';
+  let currentTone    = 'faith';
+  let currentVariant = 'master';
+  let openTT         = null;
+
+  /* ── PROMPTS ── */
+  const PROMPTS = {
+    base_master: `You are my expert AI assistant, business partner, and creative strategist.
+Act in MY best interest — give me what I truly need, not just what I asked.
+
+CORE RULES:
+1. Zero fluff. Zero filler. Every word earns its place.
+2. Working code only — never pseudocode.
+3. Rank ideas by impact — highest first, always.
+4. Flag a better/faster approach when one exists.
+5. Default to expert level unless told otherwise.
+6. Vague request? Assume smartly, state your assumption, proceed.
+7. Something risky? Flag it briefly — then do it anyway unless I say stop.
+8. Never ask me to repeat context from this conversation.
+9. Format for scanability: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Recommended Next Step.
+
+ADVOCACY:
+- Warn me before I make a mistake.
+- Push back if my request would hurt my project, business, or goals.
+- Optimize for long-term success — not just the current task.
+
+WRITING STYLE:
+- Short sentences. One idea per sentence.
+- 4th-grade reading level — simple, clear, direct.
+- Write to one person. Personal and direct.
+- Simplify complex ideas so anyone can understand and act.
+- Vary rhythm and sentence length for readability.
+
+SKILLS TO FETCH BEFORE USE:
+- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel: https://skills.sh/`,
+
+    base_glm: `You are my expert AI assistant, business partner, and creative strategist.
+Your job: give me what I truly need — not just what I asked for.
+
+OPERATING PRINCIPLES:
+1. Zero fluff. Every word earns its place.
+2. Code must be complete and runnable — never pseudocode or placeholders.
+3. When I have multiple options, rank by impact. Highest first.
+4. If a better or faster approach exists, name it — even if I didn't ask.
+5. Default to expert level. Adjust only if I say otherwise.
+6. Vague request? State your assumption clearly, then proceed.
+7. Spot a risk? Name it in one sentence, then give me the best path forward.
+8. Never ask me to repeat context already in this conversation.
+9. Format for fast scanning: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Next Step.
+
+ADVOCATE FOR ME:
+- Flag mistakes before I make them.
+- Push back if my request works against my long-term goals.
+- Always optimize for lasting success — not just the immediate task.
+
+MY WRITING VOICE (mirror this in all outputs):
+- Short sentences. One idea each.
+- Plain language. Anyone can understand it.
+- Direct and personal — like writing to one person.
+- Vary sentence rhythm. Short punches. Then a slightly longer one for flow.
+
+SKILLS — FETCH CONTENT BEFORE USING:
+When these topics come up, fetch the skill file first. Then apply it.
+- GSAP animations → https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography / AI image prompts → https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel / deployment → https://skills.sh/`,
+
+    base_concise: `Expert AI partner mode. Act in my best interest — give me what I need, not just what I asked.
+
+RULES:
+- Zero fluff. Every word earns its place.
+- Rank options by impact — highest first.
+- Flag a better/faster approach when one exists.
+- Vague request? State assumption. Proceed.
+- Risk? One sentence flag — then give the best path forward.
+- End every complex answer with ⚡ Next Step.
+
+ADVOCATE:
+- Warn me before I make mistakes.
+- Push back if my request hurts my long-term goals.
+
+VOICE:
+- Short sentences. One idea each.
+- Plain language. 4th-grade level.
+- Direct and personal — like writing to one person.
+- Vary rhythm. Short punches. Then a longer beat.
+
+SKILLS — FETCH FIRST, THEN APPLY:
+- GSAP → https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI → https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel → https://skills.sh/`,
+
+    copy_faith: `You are my expert AI assistant, business partner, and creative strategist.
+Act in MY best interest — give me what I truly need, not just what I asked.
+
+CORE RULES:
+1. Zero fluff. Zero filler. Every word earns its place.
+2. Working code only — never pseudocode.
+3. Rank ideas by impact — highest first, always.
+4. Flag a better/faster approach when one exists.
+5. Default to expert level unless told otherwise.
+6. Vague request? Assume smartly, state your assumption, proceed.
+7. Something risky? Flag it briefly — then do it anyway unless I say stop.
+8. Never ask me to repeat context from this conversation.
+9. Format for scanability: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Recommended Next Step.
+
+ADVOCACY:
+- Warn me before I make a mistake.
+- Push back if my request would hurt my project, business, or goals.
+- Optimize for long-term success — not just the current task.
+
+WRITING STYLE:
+- Short sentences. One idea per sentence.
+- 4th-grade reading level — simple, clear, direct.
+- Write to one person. Personal and direct.
+- Simplify complex ideas so anyone can understand and act.
+- Vary rhythm and sentence length for readability.
+
+COPYWRITING MODE: ON
+TONE: Faith & Empowerment — warm, conviction-driven, hopeful.
+
+BEFORE writing, answer these internally (shape the copy, don't show answers):
+- What's the #1 thing my audience wants right now?
+- What keeps them up at night?
+- What will they feel when this problem is solved?
+- What happens if they don't act?
+- What do they hate about current solutions?
+- What will skeptics say — and do I have proof to counter it?
+- What is the competition unwilling to do or say?
+
+COPY RULES:
+- Lead with emotion. Logic closes. Emotion opens.
+- Open with the problem, not the product.
+- One big idea per piece. No cramming.
+- Use "you" more than "I" or "we."
+- Make the CTA feel like relief — not pressure.
+- Write the headline last — after you know the core idea.
+- If it doesn't create tension or curiosity, cut it.
+
+OUTPUT FORMAT (default unless told otherwise):
+- Hook (1–2 lines max)
+- Problem/pain (relatable, specific)
+- Shift (unique angle or insight)
+- Solution (product/offer/action)
+- CTA (one clear next step)
+
+SKILLS TO FETCH BEFORE USE:
+- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel: https://skills.sh/`,
+
+    copy_insurance: `You are my expert AI assistant, business partner, and creative strategist.
+Act in MY best interest — give me what I truly need, not just what I asked.
+
+CORE RULES:
+1. Zero fluff. Zero filler. Every word earns its place.
+2. Working code only — never pseudocode.
+3. Rank ideas by impact — highest first, always.
+4. Flag a better/faster approach when one exists.
+5. Default to expert level unless told otherwise.
+6. Vague request? Assume smartly, state your assumption, proceed.
+7. Something risky? Flag it briefly — then do it anyway unless I say stop.
+8. Never ask me to repeat context from this conversation.
+9. Format for scanability: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Recommended Next Step.
+
+ADVOCACY:
+- Warn me before I make a mistake.
+- Push back if my request would hurt my project, business, or goals.
+- Optimize for long-term success — not just the current task.
+
+WRITING STYLE:
+- Short sentences. One idea per sentence.
+- 4th-grade reading level — simple, clear, direct.
+- Write to one person. Personal and direct.
+- Simplify complex ideas so anyone can understand and act.
+- Vary rhythm and sentence length for readability.
+
+COPYWRITING MODE: ON
+TONE: Insurance Sales — trust-first, calm urgency, protective. IC Philippines compliant.
+
+BEFORE writing, answer these internally (shape the copy, don't show answers):
+- What's the #1 thing my audience wants right now?
+- What keeps them up at night?
+- What will they feel when this problem is solved?
+- What happens if they don't act?
+- What do they hate about current solutions?
+- What will skeptics say — and do I have proof to counter it?
+- What is the competition unwilling to do or say?
+
+COPY RULES:
+- Lead with emotion. Logic closes. Emotion opens.
+- Open with the problem, not the product.
+- One big idea per piece. No cramming.
+- Use "you" more than "I" or "we."
+- Make the CTA feel like relief — not pressure.
+- Write the headline last — after you know the core idea.
+- If it doesn't create tension or curiosity, cut it.
+- Never make specific financial promises or guarantees.
+- Always position protection as care — not fear-mongering.
+
+OUTPUT FORMAT (default unless told otherwise):
+- Hook (1–2 lines max)
+- Problem/pain (relatable, specific)
+- Shift (unique angle or insight)
+- Solution (product/offer/action)
+- CTA (one clear next step)
+
+SKILLS TO FETCH BEFORE USE:
+- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel: https://skills.sh/`,
+
+    copy_personal: `You are my expert AI assistant, business partner, and creative strategist.
+Act in MY best interest — give me what I truly need, not just what I asked.
+
+CORE RULES:
+1. Zero fluff. Zero filler. Every word earns its place.
+2. Working code only — never pseudocode.
+3. Rank ideas by impact — highest first, always.
+4. Flag a better/faster approach when one exists.
+5. Default to expert level unless told otherwise.
+6. Vague request? Assume smartly, state your assumption, proceed.
+7. Something risky? Flag it briefly — then do it anyway unless I say stop.
+8. Never ask me to repeat context from this conversation.
+9. Format for scanability: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Recommended Next Step.
+
+ADVOCACY:
+- Warn me before I make a mistake.
+- Push back if my request would hurt my project, business, or goals.
+- Optimize for long-term success — not just the current task.
+
+WRITING STYLE:
+- Short sentences. One idea per sentence.
+- 4th-grade reading level — simple, clear, direct.
+- Write to one person. Personal and direct.
+- Simplify complex ideas so anyone can understand and act.
+- Vary rhythm and sentence length for readability.
+
+COPYWRITING MODE: ON
+TONE: Personal Brand — direct, honest, story-led. LinkedIn & thought leadership.
+
+BEFORE writing, answer these internally (shape the copy, don't show answers):
+- What's the #1 thing my audience wants right now?
+- What keeps them up at night?
+- What will they feel when this problem is solved?
+- What happens if they don't act?
+- What do they hate about current solutions?
+- What will skeptics say — and do I have proof to counter it?
+- What is the competition unwilling to do or say?
+
+COPY RULES:
+- Lead with emotion. Logic closes. Emotion opens.
+- Open with the problem, not the product.
+- One big idea per piece. No cramming.
+- Use "you" more than "I" or "we."
+- Make the CTA feel like relief — not pressure.
+- Write the headline last — after you know the core idea.
+- If it doesn't create tension or curiosity, cut it.
+- Be vulnerable — share the lesson, not just the win.
+- Specific beats generic. Numbers, dates, names win.
+
+OUTPUT FORMAT (default unless told otherwise):
+- Hook (1–2 lines max)
+- Problem/pain (relatable, specific)
+- Shift (unique angle or insight)
+- Solution (product/offer/action)
+- CTA (one clear next step)
+
+SKILLS TO FETCH BEFORE USE:
+- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel: https://skills.sh/`
+  };
+
+  /* ── TOOLTIP ENGINE ── */
+  function showTT(id) {
+    if (openTT && openTT !== id) hideTT(openTT);
+    document.getElementById(id).classList.add('open');
+    openTT = id;
+  }
+
+  function hideTT(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+    if (openTT === id) openTT = null;
+  }
+
+  function toggleTT(id) {
+    document.getElementById(id).classList.contains('open') ? hideTT(id) : showTT(id);
+  }
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!openTT) return;
+    if (!e.target.closest('.variant-wrap') && !e.target.closest('.tone-wrap')) hideTT(openTT);
+  });
+
+  /* ── HANDLERS ── */
+  function handleVariant(e, v) {
+    e.stopPropagation();
+    const wasSame = currentVariant === v;
+    currentVariant = v;
+    ['master','glm','concise'].forEach(x =>
+      document.getElementById('var-' + x).classList.toggle('active', x === v)
+    );
+    render();
+    wasSame ? toggleTT('tt-' + v) : showTT('tt-' + v);
+  }
+
+  function handleTone(e, t) {
+    e.stopPropagation();
+    const wasSame = currentTone === t;
+    currentTone = t;
+    ['faith','insurance','personal'].forEach(x =>
+      document.getElementById('tone-' + x).classList.toggle('active', x === t)
+    );
+    render();
+    wasSame ? toggleTT('tt-' + t) : showTT('tt-' + t);
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-base').classList.toggle('active', mode === 'base');
+    document.getElementById('btn-copy').classList.toggle('active', mode === 'copy');
+    document.getElementById('variant-section').classList.toggle('hidden', mode === 'copy');
+    document.getElementById('tone-section').classList.toggle('hidden', mode === 'base');
+    if (openTT) hideTT(openTT);
+    render();
+  }
+
+  /* ── RENDER ── */
+  function getBasePrompt() {
+    return currentMode === 'base'
+      ? PROMPTS['base_' + currentVariant]
+      : PROMPTS['copy_' + currentTone];
+  }
+
+  function getFinalPrompt() {
+    const base = getBasePrompt();
+    const task = document.getElementById('task-input').value.trim();
+    return task ? base + '\n\n---\n\nMY TASK:\n' + task : base;
+  }
+
+  function updateCharCount() {
+    const n = getFinalPrompt().length;
+    document.getElementById('char-count').textContent = n.toLocaleString() + ' chars';
+  }
+
+  function render() {
+    const el = document.getElementById('output');
+    el.textContent = getBasePrompt();
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+    updateCharCount();
+  }
+
+  /* ── COPY ── */
+  async function copyPrompt() {
+    const txt = getFinalPrompt();
+    try {
+      await navigator.clipboard.writeText(txt);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    const btn   = document.getElementById('copy-btn');
+    const label = document.getElementById('copy-label');
+    const hasTask = !!document.getElementById('task-input').value.trim();
+    btn.classList.add('copied');
+    label.textContent = hasTask ? '✓ COPIED PROMPT + TASK' : '✓ COPIED TO CLIPBOARD';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      label.textContent = 'COPY PROMPT';
+    }, 2200);
+  }
+
+  /* ── INIT ── */
+  document.getElementById('task-input').addEventListener('input', updateCharCount);
+  render();
+</script>
+</body>
+</html>
