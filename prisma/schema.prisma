@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Prompt History - stores all generated/saved prompts
+model PromptHistory {
+  id        String   @id @default(cuid())
+  mode      String   // "base" or "copy"
+  variant   String?  // "master", "glm", "concise" (for base mode)
+  tone      String?  // "faith", "insurance", "personal" (for copy mode)
+  task      String?  // Optional task text
+  prompt    String   // Full prompt content
+  isFavorite Boolean @default(false)
+  charCount Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([isFavorite])
+  @@index([createdAt])
+}
+
+// Quick Tasks - reusable task templates
+model QuickTask {
+  id        String   @id @default(cuid())
+  title     String
+  template  String   // Task template with placeholders
+  category  String?  // e.g., "content", "code", "strategy"
+  useCount  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([category])
+  @@index([useCount])
+}

@@ -1,0 +1,22 @@
+# promptc OS Configuration
+
+Before generating code, read MASTER_REFERENCE.md and apply the 8-Layer Architecture.
+
+## Quick Reference
+
+When generating UI/UX:
+- Use 8-Layer Architecture: ROLE → CONTEXT → OBJECTIVE → CONSTRAINTS → AESTHETIC → PLANNING → OUTPUT → REFINEMENT
+- Mobile-first always
+- WCAG AA accessibility minimum
+- 60fps animation budget
+
+## Animal Thinking Modes
+
+Apply when needed:
+- 🐇 Rabbit: Multiply ideas
+- 🦉 Owl: Deep analysis
+- 🐜 Ant: Break into steps
+- 🦅 Eagle: Big picture strategy
+- 🐬 Dolphin: Creative solutions
+- 🦫 Beaver: Build systems
+- 🐘 Elephant: Cross-field connections
