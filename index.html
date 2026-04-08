@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MARKY">
+<meta name="theme-color" content="#050505">
+<meta name="msapplication-TileColor" content="#f5c518">
+<meta name="format-detection" content="telephone=no">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<title>MARKY — AI Prompt Builder</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   MARKY PROMPT SYSTEM — ULTRA-MODERN GEN-Z PWA
+   Design System: Kinetic • Glass • Liquid • Neon Sparse
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Core Palette */
+  --void: #050505;
+  --void-light: #0a0a0a;
+  --surface: rgba(15, 15, 17, 0.85);
+  --surface-elevated: rgba(22, 22, 26, 0.9);
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  
+  /* Neon Accents */
+  --gold: #f5c518;
+  --gold-glow: rgba(245, 197, 24, 0.4);
+  --amber: #ff6b35;
+  --amber-glow: rgba(255, 107, 53, 0.3);
+  
+  /* Text Hierarchy */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.65);
+  --text-muted: rgba(255, 255, 255, 0.35);
+  
+  /* Semantic */
+  --success: #22c55e;
+  --success-glow: rgba(34, 197, 94, 0.4);
+  
+  /* Safe Areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-liquid: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET + BASE
+   ═══════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  background: var(--void);
+  color: var(--text-primary);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AMBIENT BACKGROUND — Liquid Gradient + Noise
+   ═══════════════════════════════════════════════════════════════ */
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: float 20s ease-in-out infinite;
+}
+
+.blob-1 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, var(--gold-glow), transparent);
+  top: -100px;
+  right: -100px;
+  animation-delay: 0s;
+}
+
+.blob-2 {
+  width: 250px;
+  height: 250px;
+  background: linear-gradient(135deg, var(--amber-glow), transparent);
+  bottom: 20%;
+  left: -80px;
+  animation-delay: -7s;
+}
+
+.blob-3 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), transparent);
+  top: 50%;
+  right: -50px;
+  animation-delay: -14s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -30px) scale(1.1); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(20px, 30px) scale(1.05); }
+}
+
+/* Noise Texture Overlay */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN CONTAINER
+   ═══════════════════════════════════════════════════════════════ */
+
+.app-container {
+  position: relative;
+  z-index: 2;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(16px + var(--safe-top)) 16px calc(120px + var(--safe-bottom));
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KINETIC HEADER
+   ═══════════════════════════════════════════════════════════════ */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  position: relative;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+}
+
+.logo-group {
+  animation: slideInDown 0.8s var(--ease-out-expo) both;
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.logo {
+  font-size: clamp(28px, 8vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  display: inline-block;
+  position: relative;
+}
+
+.logo::after {
+  content: '';
+  position: absolute;
+  inset: -4px -8px;
+  background: linear-gradient(135deg, var(--gold-glow), var(--amber-glow));
+  filter: blur(20px);
+  opacity: 0.5;
+  z-index: -1;
+  border-radius: 8px;
+}
+
+.tagline {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  animation: slideInDown 0.8s var(--ease-out-expo) 0.1s both;
+}
+
+.install-btn {
+  display: none;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 8px 14px;
+  border-radius: 100px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out-expo);
+  backdrop-filter: blur(10px);
+}
+
+.install-btn.show { display: flex; align-items: center; gap: 6px; }
+.install-btn:active { transform: scale(0.95); }
+
+.version-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  padding: 5px 10px;
+  border-radius: 100px;
+  backdrop-filter: blur(10px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLASS CARD — Base Component
+   ═══════════════════════════════════════════════════════════════ */
+
+.glass-card {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TASK INPUT SECTION — Hero Element
+   ═══════════════════════════════════════════════════════════════ */
+
+.task-section {
+  margin-bottom: 24px;
+  animation: slideInUp 0.8s var(--ease-out-expo) 0.2s both;
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.task-card {
+  padding: 20px;
+}
+
+.task-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--amber));
+  border-radius: 20px 20px 0 0;
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.task-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.task-optional {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--glass);
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+}
+
+.task-textarea {
+  width: 100%;
+  min-height: 100px;
+  max-height: 200px;
+  background: var(--void);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  resize: vertical;
+  transition: all 0.3s var(--ease-out-expo);
+  outline: none;
+}
+
+.task-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.task-textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+
+.task-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-hint::before {
+  content: '→';
+  color: var(--gold);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODE TOGGLE — Liquid Animation
+   ═══════════════════════════════════════════════════════════════ */
+
+.mode-section {
+  margin-bottom: 24px;
+  animation: slideInUp 0.8s var(--ease-out-expo) 0.3s both;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-label::before {
+  content: '';
+  width: 16px;
+  height: 1px;
+  background: var(--glass-border);
+}
+
+.mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  position: relative;
+}
+
+.mode-btn {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 18px 16px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.4s var(--ease-out-expo);
+}
+
+.mode-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--gold-glow), var(--amber-glow));
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out-expo);
+}
+
+.mode-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--amber));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-liquid);
+}
+
+.mode-btn.active {
+  border-color: var(--gold);
+  background: var(--surface-elevated);
+}
+
+.mode-btn.active::before {
+  opacity: 0.15;
+}
+
+.mode-btn.active::after {
+  transform: scaleX(1);
+}
+
+.mode-btn:active {
+  transform: scale(0.98);
+}
+
+.mode-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.mode-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s;
+}
+
+.mode-btn:not(.active) .mode-title {
+  color: var(--text-secondary);
+}
+
+.mode-desc {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VARIANT / TONE CARDS — 3D Tilt Effect
+   ═══════════════════════════════════════════════════════════════ */
+
+.variant-section,
+.tone-section {
+  margin-bottom: 24px;
+  transition: all 0.4s var(--ease-out-expo);
+}
+
+.variant-section.hidden,
+.tone-section.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  position: absolute;
+}
+
+.variant-grid,
+.tone-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.variant-card,
+.tone-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s var(--ease-out-expo);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.variant-card::before,
+.tone-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--amber));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease-liquid);
+}
+
+.variant-card.active,
+.tone-card.active {
+  border-color: var(--gold);
+  background: var(--surface-elevated);
+}
+
+.variant-card.active::before,
+.tone-card.active::before {
+  transform: scaleX(1);
+}
+
+.variant-card:active,
+.tone-card:active {
+  transform: scale(0.95);
+}
+
+.variant-num {
+  font-size: clamp(24px, 6vw, 32px);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-muted);
+  transition: all 0.3s var(--ease-out-expo);
+  margin-bottom: 6px;
+}
+
+.variant-card.active .variant-num {
+  color: var(--gold);
+  text-shadow: 0 0 20px var(--gold-glow);
+}
+
+.variant-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: color 0.3s;
+}
+
+.variant-card.active .variant-label {
+  color: var(--text-secondary);
+}
+
+.tone-emoji {
+  font-size: 28px;
+  margin-bottom: 6px;
+  display: block;
+  transition: transform 0.3s var(--ease-out-back);
+}
+
+.tone-card:active .tone-emoji {
+  transform: scale(1.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   OUTPUT SECTION
+   ═══════════════════════════════════════════════════════════════ */
+
+.output-section {
+  margin-bottom: 24px;
+  animation: slideInUp 0.8s var(--ease-out-expo) 0.5s both;
+}
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.char-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--glass);
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--glass-border);
+}
+
+.output-card {
+  padding: 20px;
+}
+
+.output-content {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 180px;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.output-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.output-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.output-content::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIXED BOTTOM CTA — Pulsing Gradient
+   ═══════════════════════════════════════════════════════════════ */
+
+.cta-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  background: linear-gradient(to top, var(--void) 60%, transparent);
+  pointer-events: none;
+}
+
+.cta-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 448px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--amber) 100%);
+  border: none;
+  border-radius: 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--void);
+  cursor: pointer;
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s var(--ease-out-expo);
+}
+
+.cta-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.cta-btn::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, var(--gold), var(--amber));
+  border-radius: 18px;
+  z-index: -1;
+  filter: blur(16px);
+  opacity: 0.5;
+}
+
+.cta-btn:active {
+  transform: scale(0.98);
+}
+
+.cta-btn:active::before {
+  opacity: 1;
+}
+
+.cta-btn.copied {
+  background: linear-gradient(135deg, var(--success), #16a34a);
+}
+
+.cta-icon {
+  font-size: 18px;
+  transition: transform 0.3s var(--ease-out-back);
+}
+
+.cta-btn:active .cta-icon {
+  transform: scale(1.2) rotate(-10deg);
+}
+
+/* Ripple Effect */
+.cta-btn .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transform: scale(0);
+  animation: ripple 0.6s ease-out;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOOLTIP MODAL — Glass Panel
+   ═══════════════════════════════════════════════════════════════ */
+
+.tooltip-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 5, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease-out-expo);
+}
+
+.tooltip-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.tooltip-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: calc(100% - 32px);
+  max-width: 340px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 24px;
+  z-index: 201;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s var(--ease-out-back);
+  backdrop-filter: blur(20px);
+}
+
+.tooltip-modal.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.tooltip-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tooltip-close:active {
+  transform: scale(0.9);
+  background: var(--glass-border);
+}
+
+.tooltip-badge {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.tooltip-body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.tooltip-body strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.tooltip-tag {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  background: rgba(255, 107, 53, 0.1);
+  border: 1px solid rgba(255, 107, 53, 0.2);
+  padding: 5px 12px;
+  border-radius: 100px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TIPS SECTION
+   ═══════════════════════════════════════════════════════════════ */
+
+.tips-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--glass-border);
+  animation: slideInUp 0.8s var(--ease-out-expo) 0.6s both;
+}
+
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.tip-card {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 14px;
+  transition: all 0.3s var(--ease-out-expo);
+}
+
+.tip-card:active {
+  transform: scale(0.97);
+}
+
+.tip-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.tip-text {
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS — Staggered Entrance
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Flash animation for output */
+.flash {
+  animation: flash 0.4s ease;
+}
+
+@keyframes flash {
+  0% { background: rgba(245, 197, 24, 0.1); }
+  100% { background: var(--surface); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .ambient-blob {
+    animation: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 360px) {
+  .tips-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .mode-toggle {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    padding-top: calc(32px + var(--safe-top));
+  }
+  
+  .task-textarea {
+    min-height: 120px;
+  }
+}
+
+/* Landscape */
+@media (max-height: 600px) {
+  .tips-section {
+    display: none;
+  }
+  
+  .output-content {
+    min-height: 100px;
+    max-height: 150px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient Background -->
+<div class="ambient-bg">
+  <div class="ambient-blob blob-1"></div>
+  <div class="ambient-blob blob-2"></div>
+  <div class="ambient-blob blob-3"></div>
+</div>
+<div class="noise-overlay"></div>
+
+<!-- Tooltip Overlay -->
+<div class="tooltip-overlay" id="tooltipOverlay"></div>
+
+<!-- Main App -->
+<div class="app-container">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo-group">
+      <h1 class="logo">MARKY</h1>
+      <p class="tagline">AI Prompt Builder · GLM</p>
+    </div>
+    <div class="header-actions">
+      <button class="install-btn" id="installBtn">
+        <span>↓</span> Install
+      </button>
+      <span class="version-pill">v3.3</span>
+    </div>
+  </header>
+
+  <!-- Task Section -->
+  <section class="task-section">
+    <div class="glass-card task-card">
+      <div class="task-header">
+        <span class="task-label">What's your task?</span>
+        <span class="task-optional">Optional</span>
+      </div>
+      <textarea 
+        class="task-textarea" 
+        id="taskInput" 
+        placeholder="Type your task here...&#10;&#10;e.g. Write a caption for my Pacific Cross post about health coverage"
+      ></textarea>
+      <p class="task-hint">Leave blank to copy base prompt only</p>
+    </div>
+  </section>
+
+  <!-- Mode Section -->
+  <section class="mode-section">
+    <div class="section-label">Mode</div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btnBase" onclick="setMode('base')">
+        <span class="mode-icon">⚡</span>
+        <span class="mode-title">Base Mode</span>
+        <span class="mode-desc">Strategy · Code · Research</span>
+      </button>
+      <button class="mode-btn" id="btnCopy" onclick="setMode('copy')">
+        <span class="mode-icon">✍️</span>
+        <span class="mode-title">Copywriting</span>
+        <span class="mode-desc">Captions · Emails · Sales</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Variant Section (Base Mode) -->
+  <section class="variant-section" id="variantSection">
+    <div class="section-label">Variant · tap for details</div>
+    <div class="variant-grid">
+      <div class="variant-card active" id="varMaster" onclick="selectVariant('master')">
+        <div class="variant-num">1</div>
+        <div class="variant-label">Master</div>
+      </div>
+      <div class="variant-card" id="varGlm" onclick="selectVariant('glm')">
+        <div class="variant-num">2</div>
+        <div class="variant-label">GLM</div>
+      </div>
+      <div class="variant-card" id="varConcise" onclick="selectVariant('concise')">
+        <div class="variant-num">3</div>
+        <div class="variant-label">Concise</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tone Section (Copy Mode) -->
+  <section class="tone-section hidden" id="toneSection">
+    <div class="section-label">Tone · tap for details</div>
+    <div class="tone-grid">
+      <div class="tone-card active" id="toneFaith" onclick="selectTone('faith')">
+        <span class="tone-emoji">🙏</span>
+        <div class="variant-label">Faith</div>
+      </div>
+      <div class="tone-card" id="toneInsurance" onclick="selectTone('insurance')">
+        <span class="tone-emoji">🛡️</span>
+        <div class="variant-label">Insurance</div>
+      </div>
+      <div class="tone-card" id="toneBrand" onclick="selectTone('personal')">
+        <span class="tone-emoji">🎯</span>
+        <div class="variant-label">Brand</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Output Section -->
+  <section class="output-section">
+    <div class="output-header">
+      <div class="section-label" style="margin: 0">Prompt Preview</div>
+      <span class="char-counter" id="charCounter">— chars</span>
+    </div>
+    <div class="glass-card output-card">
+      <div class="output-content" id="outputContent"></div>
+    </div>
+  </section>
+
+  <!-- Tips Section -->
+  <section class="tips-section">
+    <div class="section-label">Quick Reference</div>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-label">Base Mode</div>
+        <div class="tip-text">Code · Strategy · Research · Planning</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-label">Copywriting</div>
+        <div class="tip-text">Captions · Emails · Sales · CTAs</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-label">Pro Tip</div>
+        <div class="tip-text">Paste at top of new GLM chat</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Fixed CTA -->
+<div class="cta-container">
+  <button class="cta-btn" id="ctaBtn" onclick="copyPrompt()">
+    <span class="cta-icon">⎘</span>
+    <span id="ctaLabel">Copy Prompt</span>
+  </button>
+</div>
+
+<!-- Tooltip Modals -->
+<div class="tooltip-modal" id="tooltipMaster">
+  <button class="tooltip-close" onclick="closeTooltip()">×</button>
+  <div class="tooltip-badge">1 · Master</div>
+  <div class="tooltip-body">
+    <strong>Full structured ruleset.</strong> Named sections — Core Rules, Advocacy, Writing Style, Skills. Every instruction clearly labelled and numbered.
+    <br><br>
+    Best when you want GLM to follow a detailed operating framework without missing a single rule.
+    <span class="tooltip-tag">Most Explicit</span>
+  </div>
+</div>
+
+<div class="tooltip-modal" id="tooltipGlm">
+  <button class="tooltip-close" onclick="closeTooltip()">×</button>
+  <div class="tooltip-badge">2 · GLM Native</div>
+  <div class="tooltip-body">
+    <strong>Optimized for GLM's reasoning architecture.</strong> Same rules — different framing. Language that aligns with how GLM processes context.
+    <br><br>
+    Best for nuanced tasks, creative work, or when you want responses that leverage GLM's strengths.
+    <span class="tooltip-tag">Most Natural</span>
+  </div>
+</div>
+
+<div class="tooltip-modal" id="tooltipConcise">
+  <button class="tooltip-close" onclick="closeTooltip()">×</button>
+  <div class="tooltip-badge">3 · Concise</div>
+  <div class="tooltip-body">
+    <strong>Stripped to essentials.</strong> Shortest token count. Same core behavior — zero padding. GLM reads it instantly.
+    <br><br>
+    Best for quick tasks, repeated use, or when you're token-conscious.
+    <span class="tooltip-tag">Fastest</span>
+  </div>
+</div>
+
+<div class="tooltip-modal" id="tooltipFaith">
+  <button class="tooltip-close" onclick="closeTooltip()">×</button>
+  <div class="tooltip-badge">🙏 Faith & Empowerment</div>
+  <div class="tooltip-body">
+    <strong>Warm. Conviction-driven. Hopeful.</strong>
+    <br><br>
+    For @markytanky — spiritual community, breakthrough messaging, motivational content. Leads with belief. Ends with invitation.
+    <span class="tooltip-tag">@markytanky</span>
+  </div>
+</div>
+
+<div class="tooltip-modal" id="tooltipInsurance">
+  <button class="tooltip-close" onclick="closeTooltip()">×</button>
+  <div class="tooltip-badge">🛡️ Insurance Sales</div>
+  <div class="tooltip-body">
+    <strong>Trust-first. Calm urgency. Protective.</strong>
+    <br><br>
+    For Pacific Cross content — IC Philippines compliant. No financial promises. Protection framed as care.
+    <span class="tooltip-tag">Pacific Cross · IC PH</span>
+  </div>
+</div>
+
+<div class="tooltip-modal" id="tooltipBrand">
+  <button class="tooltip-close" onclick="closeTooltip()">×</button>
+  <div class="tooltip-badge">🎯 Personal Brand</div>
+  <div class="tooltip-body">
+    <strong>Direct. Honest. Story-led.</strong>
+    <br><br>
+    For LinkedIn and thought leadership — share the lesson not just the win. Be vulnerable. Specific beats generic.
+    <span class="tooltip-tag">LinkedIn · Substack</span>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+
+let state = {
+  mode: 'base',
+  variant: 'master',
+  tone: 'faith'
+};
+
+let deferredPrompt = null;
+
+// ═══════════════════════════════════════════════════════════════
+// PROMPTS
+// ═══════════════════════════════════════════════════════════════
+
+const PROMPTS = {
+  base_master: `You are my expert AI assistant, business partner, and creative strategist.
+Act in MY best interest — give me what I truly need, not just what I asked.
+
+CORE RULES:
+1. Zero fluff. Zero filler. Every word earns its place.
+2. Working code only — never pseudocode.
+3. Rank ideas by impact — highest first, always.
+4. Flag a better/faster approach when one exists.
+5. Default to expert level unless told otherwise.
+6. Vague request? Assume smartly, state your assumption, proceed.
+7. Something risky? Flag it briefly — then do it anyway unless I say stop.
+8. Never ask me to repeat context from this conversation.
+9. Format for scanability: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Recommended Next Step.
+
+ADVOCACY:
+- Warn me before I make a mistake.
+- Push back if my request would hurt my project, business, or goals.
+- Optimize for long-term success — not just the current task.
+
+WRITING STYLE:
+- Short sentences. One idea per sentence.
+- 4th-grade reading level — simple, clear, direct.
+- Write to one person. Personal and direct.
+- Simplify complex ideas so anyone can understand and act.
+- Vary rhythm and sentence length for readability.
+
+SKILLS TO FETCH BEFORE USE:
+- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel: https://skills.sh/`,
+
+  base_glm: `You are my expert AI assistant, business partner, and creative strategist.
+Your job: give me what I truly need — not just what I asked for.
+
+OPERATING PRINCIPLES:
+1. Zero fluff. Every word earns its place.
+2. Code must be complete and runnable — never pseudocode or placeholders.
+3. When I have multiple options, rank by impact. Highest first.
+4. If a better or faster approach exists, name it — even if I didn't ask.
+5. Default to expert level. Adjust only if I say otherwise.
+6. Vague request? State your assumption clearly, then proceed.
+7. Spot a risk? Name it in one sentence, then give me the best path forward.
+8. Never ask me to repeat context already in this conversation.
+9. Format for fast scanning: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Next Step.
+
+ADVOCATE FOR ME:
+- Flag mistakes before I make them.
+- Push back if my request works against my long-term goals.
+- Always optimize for lasting success — not just the immediate task.
+
+MY WRITING VOICE (mirror this in all outputs):
+- Short sentences. One idea each.
+- Plain language. Anyone can understand it.
+- Direct and personal — like writing to one person.
+- Vary sentence rhythm. Short punches. Then a slightly longer one for flow.
+
+SKILLS — FETCH CONTENT BEFORE USING:
+- GSAP animations → https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography / AI image prompts → https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel / deployment → https://skills.sh/`,
+
+  base_concise: `Expert AI partner mode. Act in my best interest — give me what I need, not just what I asked.
+
+RULES:
+- Zero fluff. Every word earns its place.
+- Rank options by impact — highest first.
+- Flag a better/faster approach when one exists.
+- Vague request? State assumption. Proceed.
+- Risk? One sentence flag — then give the best path forward.
+- End every complex answer with ⚡ Next Step.
+
+ADVOCATE:
+- Warn me before I make mistakes.
+- Push back if my request hurts my long-term goals.
+
+VOICE:
+- Short sentences. One idea each.
+- Plain language. 4th-grade level.
+- Direct and personal — like writing to one person.
+- Vary rhythm. Short punches. Then a longer beat.
+
+SKILLS — FETCH FIRST, THEN APPLY:
+- GSAP → https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI → https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel → https://skills.sh/`,
+
+  copy_faith: `You are my expert AI assistant, business partner, and creative strategist.
+Act in MY best interest — give me what I truly need, not just what I asked.
+
+CORE RULES:
+1. Zero fluff. Zero filler. Every word earns its place.
+2. Working code only — never pseudocode.
+3. Rank ideas by impact — highest first, always.
+4. Flag a better/faster approach when one exists.
+5. Default to expert level unless told otherwise.
+6. Vague request? Assume smartly, state your assumption, proceed.
+7. Something risky? Flag it briefly — then do it anyway unless I say stop.
+8. Never ask me to repeat context from this conversation.
+9. Format for scanability: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Recommended Next Step.
+
+ADVOCACY:
+- Warn me before I make a mistake.
+- Push back if my request would hurt my project, business, or goals.
+- Optimize for long-term success — not just the current task.
+
+WRITING STYLE:
+- Short sentences. One idea per sentence.
+- 4th-grade reading level — simple, clear, direct.
+- Write to one person. Personal and direct.
+- Simplify complex ideas so anyone can understand and act.
+- Vary rhythm and sentence length for readability.
+
+COPYWRITING MODE: ON
+TONE: Faith & Empowerment — warm, conviction-driven, hopeful.
+
+BEFORE writing, answer these internally (shape the copy, don't show answers):
+- What's the #1 thing my audience wants right now?
+- What keeps them up at night?
+- What will they feel when this problem is solved?
+- What happens if they don't act?
+- What do they hate about current solutions?
+- What will skeptics say — and do I have proof to counter it?
+- What is the competition unwilling to do or say?
+
+COPY RULES:
+- Lead with emotion. Logic closes. Emotion opens.
+- Open with the problem, not the product.
+- One big idea per piece. No cramming.
+- Use "you" more than "I" or "we."
+- Make the CTA feel like relief — not pressure.
+- Write the headline last — after you know the core idea.
+- If it doesn't create tension or curiosity, cut it.
+
+OUTPUT FORMAT:
+- Hook (1–2 lines max)
+- Problem/pain (relatable, specific)
+- Shift (unique angle or insight)
+- Solution (product/offer/action)
+- CTA (one clear next step)
+
+SKILLS TO FETCH BEFORE USE:
+- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel: https://skills.sh/`,
+
+  copy_insurance: `You are my expert AI assistant, business partner, and creative strategist.
+Act in MY best interest — give me what I truly need, not just what I asked.
+
+CORE RULES:
+1. Zero fluff. Zero filler. Every word earns its place.
+2. Working code only — never pseudocode.
+3. Rank ideas by impact — highest first, always.
+4. Flag a better/faster approach when one exists.
+5. Default to expert level unless told otherwise.
+6. Vague request? Assume smartly, state your assumption, proceed.
+7. Something risky? Flag it briefly — then do it anyway unless I say stop.
+8. Never ask me to repeat context from this conversation.
+9. Format for scanability: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Recommended Next Step.
+
+ADVOCACY:
+- Warn me before I make a mistake.
+- Push back if my request would hurt my project, business, or goals.
+- Optimize for long-term success — not just the current task.
+
+WRITING STYLE:
+- Short sentences. One idea per sentence.
+- 4th-grade reading level — simple, clear, direct.
+- Write to one person. Personal and direct.
+- Simplify complex ideas so anyone can understand and act.
+- Vary rhythm and sentence length for readability.
+
+COPYWRITING MODE: ON
+TONE: Insurance Sales — trust-first, calm urgency, protective. IC Philippines compliant.
+
+COPY RULES:
+- Lead with emotion. Logic closes. Emotion opens.
+- Open with the problem, not the product.
+- One big idea per piece. No cramming.
+- Use "you" more than "I" or "we."
+- Make the CTA feel like relief — not pressure.
+- Never make specific financial promises or guarantees.
+- Always position protection as care — not fear-mongering.
+
+OUTPUT FORMAT:
+- Hook (1–2 lines max)
+- Problem/pain (relatable, specific)
+- Shift (unique angle or insight)
+- Solution (product/offer/action)
+- CTA (one clear next step)
+
+SKILLS TO FETCH BEFORE USE:
+- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel: https://skills.sh/`,
+
+  copy_personal: `You are my expert AI assistant, business partner, and creative strategist.
+Act in MY best interest — give me what I truly need, not just what I asked.
+
+CORE RULES:
+1. Zero fluff. Zero filler. Every word earns its place.
+2. Working code only — never pseudocode.
+3. Rank ideas by impact — highest first, always.
+4. Flag a better/faster approach when one exists.
+5. Default to expert level unless told otherwise.
+6. Vague request? Assume smartly, state your assumption, proceed.
+7. Something risky? Flag it briefly — then do it anyway unless I say stop.
+8. Never ask me to repeat context from this conversation.
+9. Format for scanability: headers, bullets, bold key terms.
+10. End every complex answer with ⚡ Recommended Next Step.
+
+ADVOCACY:
+- Warn me before I make a mistake.
+- Push back if my request would hurt my project, business, or goals.
+- Optimize for long-term success — not just the current task.
+
+WRITING STYLE:
+- Short sentences. One idea per sentence.
+- 4th-grade reading level — simple, clear, direct.
+- Write to one person. Personal and direct.
+- Simplify complex ideas so anyone can understand and act.
+- Vary rhythm and sentence length for readability.
+
+COPYWRITING MODE: ON
+TONE: Personal Brand — direct, honest, story-led. LinkedIn & thought leadership.
+
+COPY RULES:
+- Lead with emotion. Logic closes. Emotion opens.
+- Open with the problem, not the product.
+- One big idea per piece. No cramming.
+- Use "you" more than "I" or "we."
+- Make the CTA feel like relief — not pressure.
+- Be vulnerable — share the lesson, not just the win.
+- Specific beats generic. Numbers, dates, names win.
+
+OUTPUT FORMAT:
+- Hook (1–2 lines max)
+- Problem/pain (relatable, specific)
+- Shift (unique angle or insight)
+- Solution (product/offer/action)
+- CTA (one clear next step)
+
+SKILLS TO FETCH BEFORE USE:
+- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- Vercel: https://skills.sh/`
+};
+
+// ═══════════════════════════════════════════════════════════════
+// TOOLTIP DATA
+// ═══════════════════════════════════════════════════════════════
+
+const TOOLTIPS = {
+  master: 'tooltipMaster',
+  glm: 'tooltipGlm',
+  concise: 'tooltipConcise',
+  faith: 'tooltipFaith',
+  insurance: 'tooltipInsurance',
+  personal: 'tooltipBrand'
+};
+
+// ═══════════════════════════════════════════════════════════════
+// CORE FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+function getPrompt() {
+  const key = state.mode === 'base' 
+    ? `base_${state.variant}` 
+    : `copy_${state.tone}`;
+  return PROMPTS[key];
+}
+
+function getFinalPrompt() {
+  const base = getPrompt();
+  const task = document.getElementById('taskInput').value.trim();
+  return task ? `${base}\n\n---\n\nMY TASK:\n${task}` : base;
+}
+
+function updateOutput() {
+  const output = document.getElementById('outputContent');
+  output.textContent = getPrompt();
+  output.classList.remove('flash');
+  void output.offsetWidth;
+  output.classList.add('flash');
+  updateCharCount();
+}
+
+function updateCharCount() {
+  const count = getFinalPrompt().length;
+  document.getElementById('charCounter').textContent = `${count.toLocaleString()} chars`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODE & SELECTION
+// ═══════════════════════════════════════════════════════════════
+
+function setMode(mode) {
+  state.mode = mode;
+  
+  // Update buttons
+  document.getElementById('btnBase').classList.toggle('active', mode === 'base');
+  document.getElementById('btnCopy').classList.toggle('active', mode === 'copy');
+  
+  // Toggle sections with animation
+  const variantSection = document.getElementById('variantSection');
+  const toneSection = document.getElementById('toneSection');
+  
+  if (mode === 'base') {
+    variantSection.classList.remove('hidden');
+    toneSection.classList.add('hidden');
+  } else {
+    variantSection.classList.add('hidden');
+    toneSection.classList.remove('hidden');
+  }
+  
+  closeTooltip();
+  updateOutput();
+}
+
+function selectVariant(variant) {
+  state.variant = variant;
+  
+  // Update cards
+  ['master', 'glm', 'concise'].forEach(v => {
+    const card = document.getElementById(`var${v.charAt(0).toUpperCase() + v.slice(1)}`);
+    card.classList.toggle('active', v === variant);
+  });
+  
+  // Show tooltip
+  showTooltip(variant);
+  updateOutput();
+}
+
+function selectTone(tone) {
+  state.tone = tone;
+  
+  // Update cards
+  ['faith', 'insurance', 'personal'].forEach(t => {
+    const card = document.getElementById(`tone${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    card.classList.toggle('active', t === tone);
+  });
+  
+  // Show tooltip
+  showTooltip(tone);
+  updateOutput();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════════════════════
+
+function showTooltip(id) {
+  closeTooltip();
+  
+  const tooltipId = TOOLTIPS[id];
+  if (!tooltipId) return;
+  
+  document.getElementById('tooltipOverlay').classList.add('open');
+  document.getElementById(tooltipId).classList.add('open');
+}
+
+function closeTooltip() {
+  document.getElementById('tooltipOverlay').classList.remove('open');
+  document.querySelectorAll('.tooltip-modal').forEach(m => m.classList.remove('open'));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COPY FUNCTION
+// ═══════════════════════════════════════════════════════════════
+
+async function copyPrompt() {
+  const text = getFinalPrompt();
+  const btn = document.getElementById('ctaBtn');
+  const label = document.getElementById('ctaLabel');
+  const hasTask = !!document.getElementById('taskInput').value.trim();
+  
+  // Ripple effect
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  ripple.style.width = ripple.style.height = '200px';
+  ripple.style.left = '50%';
+  ripple.style.top = '50%';
+  ripple.style.marginLeft = ripple.style.marginTop = '-100px';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+  
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  
+  // Success state
+  btn.classList.add('copied');
+  label.textContent = hasTask ? '✓ Copied with Task' : '✓ Copied';
+  
+  // Haptic feedback
+  if (navigator.vibrate) navigator.vibrate(50);
+  
+  setTimeout(() => {
+    btn.classList.remove('copied');
+    label.textContent = 'Copy Prompt';
+  }, 2000);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PWA INSTALL
+// ═══════════════════════════════════════════════════════════════
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBtn').classList.add('show');
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBtn').classList.remove('show');
+  deferredPrompt = null;
+});
+
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('installBtn').classList.remove('show');
+  }
+  deferredPrompt = null;
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SERVICE WORKER
+// ═══════════════════════════════════════════════════════════════
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('SW registered'))
+      .catch(err => console.log('SW failed:', err));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+document.getElementById('taskInput').addEventListener('input', updateCharCount);
+document.getElementById('tooltipOverlay').addEventListener('click', closeTooltip);
+
+// Handle URL params
+const params = new URLSearchParams(window.location.search);
+if (params.get('mode') === 'copy') setMode('copy');
+
+updateOutput();
+</script>
+</body>
+</html>
