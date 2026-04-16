@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // ═══════════════════════════════════════════════════════════════
@@ -19,47 +19,46 @@ interface PromptRecord {
   createdAt: string
 }
 
+interface ModuleConfig {
+  id: string
+  label: string
+  description: string
+  enabled: boolean
+  content: string
+}
+
+interface Preset {
+  id: string
+  name: string
+  createdAt: string
+  config: {
+    mode: 'base' | 'copy'
+    variant: 'master' | 'glm' | 'concise'
+    tone: 'faith' | 'insurance' | 'personal'
+    modules: Record<string, boolean>
+    task: string
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
-// PROMPTS DATA
+// PROMPT MODULES - Modular System
 // ═══════════════════════════════════════════════════════════════
 
-const PROMPTS = {
-  base_master: `You are my expert AI assistant, business partner, and creative strategist.
-Act in MY best interest — give me what I truly need, not just what I asked.
-
-CORE RULES:
-1. Zero fluff. Zero filler. Every word earns its place.
-2. Working code only — never pseudocode.
-3. Rank ideas by impact — highest first, always.
-4. Flag a better/faster approach when one exists.
-5. Default to expert level unless told otherwise.
-6. Vague request? Assume smartly, state your assumption, proceed.
-7. Something risky? Flag it briefly — then do it anyway unless I say stop.
-8. Never ask me to repeat context from this conversation.
-9. Format for scanability: headers, bullets, bold key terms.
-10. End every complex answer with ⚡ Recommended Next Step.
-
-ADVOCACY:
-- Warn me before I make a mistake.
-- Push back if my request would hurt my project, business, or goals.
-- Optimize for long-term success — not just the current task.
-
-WRITING STYLE:
-- Short sentences. One idea per sentence.
-- 4th-grade reading level — simple, clear, direct.
-- Write to one person. Personal and direct.
-- Simplify complex ideas so anyone can understand and act.
-- Vary rhythm and sentence length for readability.
-
-SKILLS TO FETCH BEFORE USE:
-- GSAP: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
-- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
-- Vercel: https://skills.sh/`,
-
-  base_glm: `You are my expert AI assistant, business partner, and creative strategist.
-Your job: give me what I truly need — not just what I asked for.
-
-OPERATING PRINCIPLES:
+const PROMPT_MODULES: Record<string, ModuleConfig> = {
+  role: {
+    id: 'role',
+    label: 'Role Definition',
+    description: 'Who the AI acts as',
+    enabled: true,
+    content: `You are my expert AI assistant, business partner, and creative strategist.
+Your job: give me what I truly need — not just what I asked for.`
+  },
+  coreRules: {
+    id: 'coreRules',
+    label: 'Core Rules',
+    description: '10 fundamental operating principles',
+    enabled: true,
+    content: `OPERATING PRINCIPLES:
 1. Zero fluff. Every word earns its place.
 2. Code must be complete and runnable — never pseudocode or placeholders.
 3. When I have multiple options, rank by impact. Highest first.
@@ -69,161 +68,126 @@ OPERATING PRINCIPLES:
 7. Spot a risk? Name it in one sentence, then give me the best path forward.
 8. Never ask me to repeat context already in this conversation.
 9. Format for fast scanning: headers, bullets, bold key terms.
-10. End every complex answer with ⚡ Next Step.
-
-ADVOCATE FOR ME:
+10. End every complex answer with ⚡ Next Step.`
+  },
+  advocacy: {
+    id: 'advocacy',
+    label: 'Advocacy Mode',
+    description: 'AI acts as your advocate',
+    enabled: true,
+    content: `ADVOCATE FOR ME:
 - Flag mistakes before I make them.
 - Push back if my request works against my long-term goals.
-- Always optimize for lasting success — not just the immediate task.
-
-MY WRITING VOICE (mirror this in all outputs):
+- Always optimize for lasting success — not just the immediate task.`
+  },
+  writingStyle: {
+    id: 'writingStyle',
+    label: 'Writing Style',
+    description: 'Voice and tone guidelines',
+    enabled: true,
+    content: `MY WRITING VOICE (mirror this in all outputs):
 - Short sentences. One idea each.
 - Plain language. Anyone can understand it.
 - Direct and personal — like writing to one person.
-- Vary sentence rhythm. Short punches. Then a slightly longer one for flow.
-
-SKILLS — FETCH CONTENT BEFORE USING:
+- Vary sentence rhythm. Short punches. Then a slightly longer one for flow.`
+  },
+  skills: {
+    id: 'skills',
+    label: 'Skills Library',
+    description: 'External skill references',
+    enabled: true,
+    content: `SKILLS — FETCH CONTENT BEFORE USING:
 - GSAP animations → https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
 - Photography / AI image prompts → https://marktantongco.github.io/aiskills-photog/skills.md
-- Vercel / deployment → https://skills.sh/`,
+- Vercel / deployment → https://skills.sh/`
+  },
+  codeMode: {
+    id: 'codeMode',
+    label: '+Code Module',
+    description: 'Enhanced coding rules',
+    enabled: false,
+    content: `CODE MODE: ON
+- Always provide complete, runnable code — no placeholders
+- Include error handling by default
+- Add type definitions for TypeScript
+- Include comments for complex logic only
+- Follow clean code principles
+- Consider edge cases proactively`
+  },
+  designMode: {
+    id: 'designMode',
+    label: '+Design Module',
+    description: 'UI/UX design guidelines',
+    enabled: false,
+    content: `DESIGN MODE: ON
+- Use Tailwind CSS for styling
+- Mobile-first responsive design
+- WCAG AA accessibility minimum
+- 60fps animation budget
+- Semantic HTML structure
+- Support dark mode by default`
+  },
+  copyMode: {
+    id: 'copyMode',
+    label: '+Copywriting Module',
+    description: 'Copywriting frameworks',
+    enabled: false,
+    content: `COPYWRITING MODE: ON
+- Lead with emotion. Logic closes. Emotion opens.
+- Open with the problem, not the product.
+- One big idea per piece. No cramming.
+- Use "you" more than "I" or "we."
+- Make the CTA feel like relief — not pressure.`
+  }
+}
 
-  base_concise: `Expert AI partner mode. Act in my best interest — give me what I need, not just what I asked.
-
-RULES:
-- Zero fluff. Every word earns its place.
-- Rank options by impact — highest first.
-- Flag a better/faster approach when one exists.
-- Vague request? State assumption. Proceed.
-- Risk? One sentence flag — then give the best path forward.
-- End every complex answer with ⚡ Next Step.
-
-ADVOCATE:
-- Warn me before I make mistakes.
-- Push back if my request hurts my long-term goals.
-
-VOICE:
-- Short sentences. One idea each.
-- Plain language. 4th-grade level.
-- Direct and personal — like writing to one person.
-- Vary rhythm. Short punches. Then a longer beat.
-
-SKILLS — FETCH FIRST, THEN APPLY:
-- GSAP → https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
-- Photography AI → https://marktantongco.github.io/aiskills-photog/skills.md
-- Vercel → https://skills.sh/`,
-
-  copy_faith: `You are my expert AI assistant, business partner, and creative strategist.
-Act in MY best interest — give me what I truly need, not just what I asked.
-
-CORE RULES:
-1. Zero fluff. Zero filler. Every word earns its place.
-2. Working code only — never pseudocode.
-3. Rank ideas by impact — highest first, always.
-4. Flag a better/faster approach when one exists.
-5. Default to expert level unless told otherwise.
-6. Vague request? Assume smartly, state your assumption, proceed.
-7. Something risky? Flag it briefly — then do it anyway unless I say stop.
-8. Never ask me to repeat context from this conversation.
-9. Format for scanability: headers, bullets, bold key terms.
-10. End every complex answer with ⚡ Recommended Next Step.
-
-COPYWRITING MODE: ON
-TONE: Faith & Empowerment — warm, conviction-driven, hopeful.
-
-BEFORE writing, answer these internally:
+const COPY_TONE_MODULES: Record<string, { prefix: string; tone: string; rules: string }> = {
+  faith: {
+    prefix: 'COPYWRITING MODE: ON',
+    tone: 'TONE: Faith & Empowerment — warm, conviction-driven, hopeful.',
+    rules: `BEFORE writing, answer these internally:
 - What's the #1 thing my audience wants right now?
 - What keeps them up at night?
 - What will they feel when this problem is solved?
-- What happens if they don't act?
-
-COPY RULES:
-- Lead with emotion. Logic closes. Emotion opens.
-- Open with the problem, not the product.
-- One big idea per piece. No cramming.
-- Use "you" more than "I" or "we."
-- Make the CTA feel like relief — not pressure.
-
-OUTPUT FORMAT:
-- Hook (1–2 lines max)
-- Problem/pain (relatable, specific)
-- Shift (unique angle or insight)
-- Solution (product/offer/action)
-- CTA (one clear next step)`,
-
-  copy_insurance: `You are my expert AI assistant, business partner, and creative strategist.
-Act in MY best interest — give me what I truly need, not just what I asked.
-
-CORE RULES:
-1. Zero fluff. Zero filler. Every word earns its place.
-2. Working code only — never pseudocode.
-3. Rank ideas by impact — highest first, always.
-4. Flag a better/faster approach when one exists.
-5. Default to expert level unless told otherwise.
-6. Vague request? Assume smartly, state your assumption, proceed.
-7. Something risky? Flag it briefly — then do it anyway unless I say stop.
-8. Never ask me to repeat context from this conversation.
-9. Format for scanability: headers, bullets, bold key terms.
-10. End every complex answer with ⚡ Recommended Next Step.
-
-COPYWRITING MODE: ON
-TONE: Insurance Sales — trust-first, calm urgency, protective. IC Philippines compliant.
-
-COPY RULES:
-- Lead with emotion. Logic closes. Emotion opens.
-- Open with the problem, not the product.
-- One big idea per piece. No cramming.
-- Use "you" more than "I" or "we."
+- What happens if they don't act?`
+  },
+  insurance: {
+    prefix: 'COPYWRITING MODE: ON',
+    tone: 'TONE: Insurance Sales — trust-first, calm urgency, protective. IC Philippines compliant.',
+    rules: `COPY RULES:
 - Never make specific financial promises or guarantees.
 - Always position protection as care — not fear-mongering.
-
-OUTPUT FORMAT:
-- Hook (1–2 lines max)
-- Problem/pain (relatable, specific)
-- Shift (unique angle or insight)
-- Solution (product/offer/action)
-- CTA (one clear next step)`,
-
-  copy_personal: `You are my expert AI assistant, business partner, and creative strategist.
-Act in MY best interest — give me what I truly need, not just what I asked.
-
-CORE RULES:
-1. Zero fluff. Zero filler. Every word earns its place.
-2. Working code only — never pseudocode.
-3. Rank ideas by impact — highest first, always.
-4. Flag a better/faster approach when one exists.
-5. Default to expert level unless told otherwise.
-6. Vague request? Assume smartly, state your assumption, proceed.
-7. Something risky? Flag it briefly — then do it anyway unless I say stop.
-8. Never ask me to repeat context from this conversation.
-9. Format for scanability: headers, bullets, bold key terms.
-10. End every complex answer with ⚡ Recommended Next Step.
-
-COPYWRITING MODE: ON
-TONE: Personal Brand — direct, honest, story-led. LinkedIn & thought leadership.
-
-COPY RULES:
-- Lead with emotion. Logic closes. Emotion opens.
-- Open with the problem, not the product.
-- One big idea per piece. No cramming.
-- Use "you" more than "I" or "we."
+- Build trust through transparency.`
+  },
+  personal: {
+    prefix: 'COPYWRITING MODE: ON',
+    tone: 'TONE: Personal Brand — direct, honest, story-led. LinkedIn & thought leadership.',
+    rules: `COPY RULES:
 - Be vulnerable — share the lesson, not just the win.
 - Specific beats generic. Numbers, dates, names win.
-
-OUTPUT FORMAT:
-- Hook (1–2 lines max)
-- Problem/pain (relatable, specific)
-- Shift (unique angle or insight)
-- Solution (product/offer/action)
-- CTA (one clear next step)`
+- Connect the personal to the universal.`
+  }
 }
 
-const TOOLTIPS = {
-  master: { badge: '1 · Master', body: 'Full structured ruleset with every instruction clearly labelled.', tag: 'Most Explicit' },
-  glm: { badge: '2 · GLM Native', body: 'Optimized for GLM\'s reasoning architecture.', tag: 'Most Natural' },
-  concise: { badge: '3 · Concise', body: 'Stripped to essentials. Shortest token count.', tag: 'Fastest' },
-  faith: { badge: '🙏 Faith', body: 'Warm. Conviction-driven. Hopeful.', tag: '@markytanky' },
-  insurance: { badge: '🛡️ Insurance', body: 'Trust-first. Calm urgency. Protective.', tag: 'Pacific Cross' },
-  personal: { badge: '🎯 Brand', body: 'Direct. Honest. Story-led.', tag: 'LinkedIn' }
+const MODE_CARDS = [
+  { id: 'master', number: '1', label: 'Master', emoji: '⚡', tag: 'Most Explicit', preview: 'Full structured ruleset with every instruction clearly labelled.' },
+  { id: 'glm', number: '2', label: 'GLM Native', emoji: '🧠', tag: 'Most Natural', preview: 'Optimized for GLM\'s reasoning architecture.' },
+  { id: 'concise', number: '3', label: 'Concise', emoji: '🚀', tag: 'Fastest', preview: 'Stripped to essentials. Shortest token count.' }
+]
+
+const TONE_CARDS = [
+  { id: 'faith', emoji: '🙏', label: 'Faith', tag: '@markytanky', preview: 'Warm. Conviction-driven. Hopeful.' },
+  { id: 'insurance', emoji: '🛡️', label: 'Insurance', tag: 'Pacific Cross', preview: 'Trust-first. Calm urgency. Protective.' },
+  { id: 'personal', emoji: '🎯', label: 'Brand', tag: 'LinkedIn', preview: 'Direct. Honest. Story-led.' }
+]
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+// Rough token estimation (GPT-style: ~4 chars per token)
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4)
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -268,19 +232,6 @@ function HistoryPanel({
   const [showFavorites, setShowFavorites] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const loadHistory = useCallback(async (favoritesOnly: boolean) => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/prompts?favorites=${favoritesOnly}&limit=30`)
-      const data = await res.json()
-      if (data.success) setHistory(data.data)
-    } catch (e) {
-      console.error('Failed to fetch history:', e)
-    }
-    setLoading(false)
-  }, [])
-
-  // Fetch on open or when filter changes
   useEffect(() => {
     if (!isOpen) return
     
@@ -308,7 +259,6 @@ function HistoryPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, isFavorite: !current })
       })
-      fetchHistory(showFavorites)
       onRefresh()
     } catch (e) {
       console.error('Failed to toggle favorite:', e)
@@ -318,7 +268,6 @@ function HistoryPanel({
   const deletePrompt = async (id: string) => {
     try {
       await fetch(`/api/prompts?id=${id}`, { method: 'DELETE' })
-      fetchHistory(showFavorites)
       onRefresh()
     } catch (e) {
       console.error('Failed to delete:', e)
@@ -348,7 +297,6 @@ function HistoryPanel({
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
-            {/* Header */}
             <div className="p-5 border-b border-white/5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-gradient-gold">History</h2>
               <div className="flex items-center gap-2">
@@ -369,8 +317,6 @@ function HistoryPanel({
                 </button>
               </div>
             </div>
-
-            {/* List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {loading ? (
                 <div className="text-center text-white/30 py-8">Loading...</div>
@@ -430,48 +376,286 @@ function HistoryPanel({
 }
 
 // ═══════════════════════════════════════════════════════════════
+// PRESET MANAGER MODAL
+// ═══════════════════════════════════════════════════════════════
+
+function PresetModal({
+  isOpen,
+  onClose,
+  onSave,
+  onLoad,
+  presets
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSave: (name: string) => void
+  onLoad: (preset: Preset) => void
+  presets: Preset[]
+}) {
+  const [presetName, setPresetName] = useState('')
+  const [activeTab, setActiveTab] = useState<'save' | 'load'>('save')
+
+  if (!isOpen) return null
+
+  return (
+    <>
+      <motion.div
+        className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="fixed z-[201] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-[400px] glass rounded-3xl p-6 border border-white/5"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:bg-white/10 transition-colors">×</button>
+        
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab('save')}
+            className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'save' ? 'bg-[#f5c518] text-black' : 'bg-white/5 text-white/50'}`}
+          >
+            Save Preset
+          </button>
+          <button
+            onClick={() => setActiveTab('load')}
+            className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === 'load' ? 'bg-[#f5c518] text-black' : 'bg-white/5 text-white/50'}`}
+          >
+            Load Preset
+          </button>
+        </div>
+
+        {activeTab === 'save' ? (
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              placeholder="Preset name (e.g., My Coding Setup)"
+              className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#f5c518]/50"
+            />
+            <button
+              onClick={() => {
+                if (presetName.trim()) {
+                  onSave(presetName.trim())
+                  setPresetName('')
+                  onClose()
+                }
+              }}
+              disabled={!presetName.trim()}
+              className="w-full py-3 rounded-xl font-semibold bg-gradient-gold text-black disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              💾 Save Preset
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {presets.length === 0 ? (
+              <div className="text-center text-white/30 py-8">
+                <span className="text-2xl block mb-2">📂</span>
+                No saved presets yet
+              </div>
+            ) : (
+              presets.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => {
+                    onLoad(preset)
+                    onClose()
+                  }}
+                  className="w-full p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-left group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-white">{preset.name}</span>
+                    <span className="text-[10px] text-white/30">{new Date(preset.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50">
+                      {preset.config.mode === 'base' ? '⚡' : '✍️'} {preset.config.variant || preset.config.tone}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50">
+                      {Object.values(preset.config.modules).filter(Boolean).length} modules
+                    </span>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </motion.div>
+    </>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
 export default function MarkyPromptBuilder() {
+  // Core state
   const [mode, setMode] = useState<'base' | 'copy'>('base')
   const [variant, setVariant] = useState<'master' | 'glm' | 'concise'>('master')
   const [tone, setTone] = useState<'faith' | 'insurance' | 'personal'>('faith')
   const [task, setTask] = useState('')
+  
+  // UI state
   const [copied, setCopied] = useState(false)
+  const [copiedMd, setCopiedMd] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [presetModalOpen, setPresetModalOpen] = useState(false)
+  const [showBuilder, setShowBuilder] = useState(false)
   const [favoritesCount, setFavoritesCount] = useState(0)
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  
+  // Modules state
+  const [modules, setModules] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {}
+    Object.values(PROMPT_MODULES).forEach(m => {
+      initial[m.id] = m.enabled
+    })
+    return initial
+  })
+  
+  // Presets state
+  const [presets, setPresets] = useState<Preset[]>([])
 
-  const getPrompt = useCallback(() => {
-    const key = mode === 'base' ? `base_${variant}` : `copy_${tone}`
-    return PROMPTS[key as keyof typeof PROMPTS]
-  }, [mode, variant, tone])
+  // Load presets from localStorage
+  useEffect(() => {
+    const savedPresets = localStorage.getItem('marky-presets')
+    if (savedPresets) {
+      try {
+        setPresets(JSON.parse(savedPresets))
+      } catch (e) {
+        console.error('Failed to load presets:', e)
+      }
+    }
+  }, [])
+
+  // Build the prompt dynamically based on modules
+  const buildPrompt = useCallback(() => {
+    const parts: string[] = []
+    
+    // For copy mode, use the tone-specific content
+    if (mode === 'copy') {
+      const toneData = COPY_TONE_MODULES[tone]
+      
+      if (modules.role) {
+        parts.push(PROMPT_MODULES.role.content)
+      }
+      
+      parts.push('')
+      parts.push(toneData.prefix)
+      parts.push(toneData.tone)
+      parts.push('')
+      parts.push(toneData.rules)
+      
+      if (modules.copyMode) {
+        parts.push('')
+        parts.push(PROMPT_MODULES.copyMode.content)
+      }
+    } else {
+      // Base mode - assemble from modules
+      if (modules.role) parts.push(PROMPT_MODULES.role.content)
+      if (modules.coreRules) {
+        parts.push('')
+        parts.push(PROMPT_MODULES.coreRules.content)
+      }
+      if (modules.advocacy) {
+        parts.push('')
+        parts.push(PROMPT_MODULES.advocacy.content)
+      }
+      if (modules.writingStyle) {
+        parts.push('')
+        parts.push(PROMPT_MODULES.writingStyle.content)
+      }
+      if (modules.skills) {
+        parts.push('')
+        parts.push(PROMPT_MODULES.skills.content)
+      }
+      if (modules.codeMode) {
+        parts.push('')
+        parts.push(PROMPT_MODULES.codeMode.content)
+      }
+      if (modules.designMode) {
+        parts.push('')
+        parts.push(PROMPT_MODULES.designMode.content)
+      }
+    }
+    
+    return parts.join('\n')
+  }, [mode, tone, modules])
 
   const getFinalPrompt = useCallback(() => {
-    const base = getPrompt()
+    const base = buildPrompt()
     return task.trim() ? `${base}\n\n---\n\nMY TASK:\n${task.trim()}` : base
-  }, [getPrompt, task])
+  }, [buildPrompt, task])
 
-  const copyToClipboard = async () => {
+  // Token count
+  const tokenCount = useMemo(() => estimateTokens(getFinalPrompt()), [getFinalPrompt])
+  const charCount = getFinalPrompt().length
+
+  // Copy functions
+  const copyToClipboard = async (asMarkdown: boolean = false) => {
+    const text = asMarkdown 
+      ? `\`\`\`\n${getFinalPrompt()}\n\`\`\``
+      : getFinalPrompt()
+    
     try {
-      await navigator.clipboard.writeText(getFinalPrompt())
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(text)
+      if (asMarkdown) {
+        setCopiedMd(true)
+        setTimeout(() => setCopiedMd(false), 2000)
+      } else {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }
     } catch {
       const textarea = document.createElement('textarea')
-      textarea.value = getFinalPrompt()
+      textarea.value = text
       textarea.style.cssText = 'position:fixed;opacity:0'
       document.body.appendChild(textarea)
       textarea.select()
       document.execCommand('copy')
       document.body.removeChild(textarea)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (asMarkdown) {
+        setCopiedMd(true)
+        setTimeout(() => setCopiedMd(false), 2000)
+      } else {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }
     }
   }
 
+  // Copy URL with state
+  const copyUrlToClipboard = async () => {
+    const params = new URLSearchParams()
+    params.set('mode', mode)
+    if (mode === 'base') {
+      params.set('variant', variant)
+    } else {
+      params.set('tone', tone)
+    }
+    if (task) params.set('task', encodeURIComponent(task))
+    
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`
+    
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      console.error('Failed to copy URL')
+    }
+  }
+
+  // Save to database
   const savePrompt = async () => {
     try {
       await fetch('/api/prompts', {
@@ -483,7 +667,7 @@ export default function MarkyPromptBuilder() {
           tone: mode === 'copy' ? tone : null,
           task: task.trim() || null,
           prompt: getFinalPrompt(),
-          charCount: getFinalPrompt().length
+          charCount
         })
       })
       setSaved(true)
@@ -492,6 +676,34 @@ export default function MarkyPromptBuilder() {
     } catch (e) {
       console.error('Failed to save:', e)
     }
+  }
+
+  // Save preset
+  const savePreset = (name: string) => {
+    const newPreset: Preset = {
+      id: Date.now().toString(),
+      name,
+      createdAt: new Date().toISOString(),
+      config: {
+        mode,
+        variant,
+        tone,
+        modules: { ...modules },
+        task
+      }
+    }
+    const updated = [...presets, newPreset]
+    setPresets(updated)
+    localStorage.setItem('marky-presets', JSON.stringify(updated))
+  }
+
+  // Load preset
+  const loadPreset = (preset: Preset) => {
+    setMode(preset.config.mode)
+    setVariant(preset.config.variant)
+    setTone(preset.config.tone)
+    setModules(preset.config.modules)
+    setTask(preset.config.task)
   }
 
   const fetchFavoritesCount = useCallback(async () => {
@@ -508,6 +720,20 @@ export default function MarkyPromptBuilder() {
     fetchFavoritesCount()
   }, [fetchFavoritesCount])
 
+  // URL state management
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlMode = params.get('mode')
+    const urlVariant = params.get('variant')
+    const urlTone = params.get('tone')
+    const urlTask = params.get('task')
+    
+    if (urlMode === 'base' || urlMode === 'copy') setMode(urlMode)
+    if (urlVariant && ['master', 'glm', 'concise'].includes(urlVariant)) setVariant(urlVariant as typeof variant)
+    if (urlTone && ['faith', 'insurance', 'personal'].includes(urlTone)) setTone(urlTone as typeof tone)
+    if (urlTask) setTask(decodeURIComponent(urlTask))
+  }, [])
+
   const selectFromHistory = (record: PromptRecord) => {
     setMode(record.mode as 'base' | 'copy')
     if (record.variant) setVariant(record.variant as 'master' | 'glm' | 'concise')
@@ -516,13 +742,15 @@ export default function MarkyPromptBuilder() {
     setHistoryOpen(false)
   }
 
-  const charCount = getFinalPrompt().length
+  const toggleModule = (id: string) => {
+    setModules(prev => ({ ...prev, [id]: !prev[id] }))
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-white relative noise-overlay">
       <AmbientBackground />
       
-      <div className="relative z-10 max-w-md mx-auto px-4 pt-safe-top pb-32">
+      <div className="relative z-10 max-w-md mx-auto px-4 pt-safe-top pb-40">
         {/* Header */}
         <motion.header 
           className="flex items-start justify-between py-5 mb-6 border-b border-white/5 relative"
@@ -541,8 +769,16 @@ export default function MarkyPromptBuilder() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setPresetModalOpen(true)}
+              className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white/60 transition-all"
+              title="Presets"
+            >
+              <span className="text-base">📂</span>
+            </button>
+            <button
               onClick={() => setHistoryOpen(true)}
               className="relative w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white/60 transition-all"
+              title="History"
             >
               <span className="text-base">⏱</span>
               {favoritesCount > 0 && (
@@ -552,174 +788,322 @@ export default function MarkyPromptBuilder() {
               )}
             </button>
             <span className="font-mono text-[9px] text-white/30 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
-              v3.3
+              v3.4
             </span>
           </div>
         </motion.header>
 
-        {/* Task Section */}
-        <motion.section 
-          className="mb-6"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <div className="glass rounded-2xl p-5 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold" />
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-[#f5c518]">
-                What's your task?
-              </span>
-              <span className="text-[9px] tracking-widest uppercase text-white/30 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
-                Optional
-              </span>
-            </div>
-            <textarea
-              value={task}
-              onChange={(e) => setTask(e.target.value)}
-              placeholder="Type your task here...&#10;&#10;e.g. Write a caption for my Pacific Cross post"
-              className="w-full min-h-[100px] bg-black/50 border border-white/5 rounded-xl p-4 text-sm text-white placeholder:text-white/20 resize-none focus:outline-none focus:border-[#f5c518]/50 focus:ring-2 focus:ring-[#f5c518]/20 transition-all font-sans"
-            />
-            <p className="text-[11px] text-white/30 mt-3 flex items-center gap-2">
-              <span className="text-[#f5c518]">→</span>
-              Leave blank to copy base prompt only
-            </p>
-          </div>
-        </motion.section>
-
-        {/* Mode Section */}
-        <motion.section 
-          className="mb-6"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
-            <span className="w-4 h-px bg-white/10" />
-            Mode
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setMode('base')}
-              className={`relative p-5 rounded-2xl text-left overflow-hidden transition-all duration-300 ${
-                mode === 'base' ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
-              } border`}
-            >
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
-                style={{ transform: mode === 'base' ? 'scaleX(1)' : 'scaleX(0)' }} 
-              />
-              <span className="text-xl block mb-2">⚡</span>
-              <span className="text-sm font-semibold block mb-1">Base Mode</span>
-              <span className="text-[11px] text-white/40">Strategy · Code · Research</span>
-            </button>
-            <button
-              onClick={() => setMode('copy')}
-              className={`relative p-5 rounded-2xl text-left overflow-hidden transition-all duration-300 ${
-                mode === 'copy' ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
-              } border`}
-            >
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
-                style={{ transform: mode === 'copy' ? 'scaleX(1)' : 'scaleX(0)' }} 
-              />
-              <span className="text-xl block mb-2">✍️</span>
-              <span className="text-sm font-semibold block mb-1">Copywriting</span>
-              <span className="text-[11px] text-white/40">Captions · Emails · Sales</span>
-            </button>
-          </div>
-        </motion.section>
-
-        {/* Variant/Tone Section */}
-        <AnimatePresence mode="wait">
-          {mode === 'base' ? (
-            <motion.section 
-              key="variant"
-              className="mb-6"
-              initial={{ opacity: 0, y: -10 }}
+        {/* Build Prompt Button - Entry Point */}
+        <AnimatePresence>
+          {!showBuilder && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-            >
-              <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
-                <span className="w-4 h-px bg-white/10" />
-                Variant · tap for details
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                {(['master', 'glm', 'concise'] as const).map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => { setVariant(v); setActiveTooltip(v) }}
-                    className={`relative p-4 rounded-2xl text-center transition-all duration-300 ${
-                      variant === v ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07] active:scale-95'
-                    } border`}
-                  >
-                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
-                      style={{ transform: variant === v ? 'scaleX(1)' : 'scaleX(0)' }} 
-                    />
-                    <span className={`text-2xl font-bold block mb-1 transition-all ${variant === v ? 'text-[#f5c518] glow-gold-text' : 'text-white/30'}`}>
-                      {v === 'master' ? '1' : v === 'glm' ? '2' : '3'}
-                    </span>
-                    <span className="text-[9px] tracking-widest uppercase text-white/40">{v.charAt(0).toUpperCase() + v.slice(1)}</span>
-                  </button>
-                ))}
-              </div>
-            </motion.section>
-          ) : (
-            <motion.section 
-              key="tone"
+              exit={{ opacity: 0, y: -20 }}
               className="mb-6"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
             >
-              <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
-                <span className="w-4 h-px bg-white/10" />
-                Tone · tap for details
-              </p>
-              <div className="grid grid-cols-3 gap-3">
-                {([
-                  { id: 'faith', emoji: '🙏', label: 'Faith' },
-                  { id: 'insurance', emoji: '🛡️', label: 'Insurance' },
-                  { id: 'personal', emoji: '🎯', label: 'Brand' }
-                ] as const).map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => { setTone(t.id); setActiveTooltip(t.id) }}
-                    className={`relative p-4 rounded-2xl text-center transition-all duration-300 ${
-                      tone === t.id ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07] active:scale-95'
-                    } border`}
-                  >
-                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
-                      style={{ transform: tone === t.id ? 'scaleX(1)' : 'scaleX(0)' }} 
-                    />
-                    <span className="text-2xl block mb-1">{t.emoji}</span>
-                    <span className="text-[9px] tracking-widest uppercase text-white/40">{t.label}</span>
-                  </button>
-                ))}
+              <button
+                onClick={() => setShowBuilder(true)}
+                className="w-full glass rounded-2xl p-6 text-left hover:bg-white/[0.07] transition-all group relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-gold transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-2xl block mb-2">⚡</span>
+                    <span className="text-lg font-bold block mb-1">Build Your System Prompt</span>
+                    <span className="text-sm text-white/40">Configure modules, modes, and presets</span>
+                  </div>
+                  <div className="w-12 h-12 rounded-xl bg-[#f5c518]/10 flex items-center justify-center">
+                    <span className="text-[#f5c518] text-2xl">→</span>
+                  </div>
+                </div>
+              </button>
+              
+              {/* Quick Stats */}
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="bg-white/5 rounded-xl p-3 text-center">
+                  <span className="text-xl font-bold text-[#f5c518]">{tokenCount}</span>
+                  <span className="text-[10px] text-white/40 block mt-1">tokens</span>
+                </div>
+                <div className="bg-white/5 rounded-xl p-3 text-center">
+                  <span className="text-xl font-bold text-white">{charCount}</span>
+                  <span className="text-[10px] text-white/40 block mt-1">chars</span>
+                </div>
+                <div className="bg-white/5 rounded-xl p-3 text-center">
+                  <span className="text-xl font-bold text-white">{Object.values(modules).filter(Boolean).length}</span>
+                  <span className="text-[10px] text-white/40 block mt-1">modules</span>
+                </div>
               </div>
-            </motion.section>
+            </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Output Section */}
+        {/* Builder Interface */}
+        <AnimatePresence>
+          {showBuilder && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {/* Collapse Button */}
+              <button
+                onClick={() => setShowBuilder(false)}
+                className="w-full mb-4 py-2 text-center text-xs text-white/40 hover:text-white/60 transition-colors"
+              >
+                ↑ Collapse Builder
+              </button>
+
+              {/* Task Section */}
+              <motion.section 
+                className="mb-6"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <div className="glass rounded-2xl p-5 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold" />
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[11px] font-semibold tracking-widest uppercase text-[#f5c518]">
+                      What's your task?
+                    </span>
+                    <span className="text-[9px] tracking-widest uppercase text-white/30 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                      Optional
+                    </span>
+                  </div>
+                  <textarea
+                    value={task}
+                    onChange={(e) => setTask(e.target.value)}
+                    placeholder="Type your task here...&#10;&#10;e.g. Write a caption for my Pacific Cross post"
+                    className="w-full min-h-[100px] bg-black/50 border border-white/5 rounded-xl p-4 text-sm text-white placeholder:text-white/20 resize-none focus:outline-none focus:border-[#f5c518]/50 focus:ring-2 focus:ring-[#f5c518]/20 transition-all font-sans"
+                  />
+                </div>
+              </motion.section>
+
+              {/* Mode Section - Interactive Cards */}
+              <motion.section 
+                className="mb-6"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+              >
+                <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
+                  <span className="w-4 h-px bg-white/10" />
+                  Mode
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { id: 'base', emoji: '⚡', label: 'Base Mode', desc: 'Strategy · Code · Research' },
+                    { id: 'copy', emoji: '✍️', label: 'Copywriting', desc: 'Captions · Emails · Sales' }
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setMode(m.id as 'base' | 'copy')}
+                      className={`relative p-5 rounded-2xl text-left overflow-hidden transition-all duration-300 ${
+                        mode === m.id ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
+                      } border`}
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
+                        style={{ transform: mode === m.id ? 'scaleX(1)' : 'scaleX(0)' }} 
+                      />
+                      <span className="text-xl block mb-2">{m.emoji}</span>
+                      <span className="text-sm font-semibold block mb-1">{m.label}</span>
+                      <span className="text-[11px] text-white/40">{m.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </motion.section>
+
+              {/* Variant/Tone Section - Interactive Cards with Hover Preview */}
+              <AnimatePresence mode="wait">
+                {mode === 'base' ? (
+                  <motion.section 
+                    key="variant"
+                    className="mb-6"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
+                      <span className="w-4 h-px bg-white/10" />
+                      Variant
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {MODE_CARDS.map((v) => (
+                        <div
+                          key={v.id}
+                          className="relative"
+                          onMouseEnter={() => setHoveredCard(`variant-${v.id}`)}
+                          onMouseLeave={() => setHoveredCard(null)}
+                        >
+                          <button
+                            onClick={() => setVariant(v.id as typeof variant)}
+                            className={`relative w-full p-4 rounded-2xl text-center transition-all duration-300 ${
+                              variant === v.id ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07] active:scale-95'
+                            } border`}
+                          >
+                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
+                              style={{ transform: variant === v.id ? 'scaleX(1)' : 'scaleX(0)' }} 
+                            />
+                            <span className={`text-2xl font-bold block mb-1 transition-all ${variant === v.id ? 'text-[#f5c518] glow-gold-text' : 'text-white/30'}`}>
+                              {v.number}
+                            </span>
+                            <span className="text-[9px] tracking-widest uppercase text-white/40">{v.label}</span>
+                          </button>
+                          
+                          {/* Hover Preview */}
+                          <AnimatePresence>
+                            {hoveredCard === `variant-${v.id}` && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 5 }}
+                                className="absolute z-10 top-full left-0 right-0 mt-2 p-3 glass rounded-xl text-[11px] text-white/60"
+                              >
+                                <span className="text-[9px] text-[#ff6b35] uppercase tracking-wide">{v.tag}</span>
+                                <p className="mt-1">{v.preview}</p>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.section>
+                ) : (
+                  <motion.section 
+                    key="tone"
+                    className="mb-6"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
+                      <span className="w-4 h-px bg-white/10" />
+                      Tone
+                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {TONE_CARDS.map((t) => (
+                        <div
+                          key={t.id}
+                          className="relative"
+                          onMouseEnter={() => setHoveredCard(`tone-${t.id}`)}
+                          onMouseLeave={() => setHoveredCard(null)}
+                        >
+                          <button
+                            onClick={() => setTone(t.id as typeof tone)}
+                            className={`relative w-full p-4 rounded-2xl text-center transition-all duration-300 ${
+                              tone === t.id ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07] active:scale-95'
+                            } border`}
+                          >
+                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
+                              style={{ transform: tone === t.id ? 'scaleX(1)' : 'scaleX(0)' }} 
+                            />
+                            <span className="text-2xl block mb-1">{t.emoji}</span>
+                            <span className="text-[9px] tracking-widest uppercase text-white/40">{t.label}</span>
+                          </button>
+                          
+                          <AnimatePresence>
+                            {hoveredCard === `tone-${t.id}` && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 5 }}
+                                className="absolute z-10 top-full left-0 right-0 mt-2 p-3 glass rounded-xl text-[11px] text-white/60"
+                              >
+                                <span className="text-[9px] text-[#ff6b35] uppercase tracking-wide">{t.tag}</span>
+                                <p className="mt-1">{t.preview}</p>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.section>
+                )}
+              </AnimatePresence>
+
+              {/* Modules Section - Toggleable */}
+              <motion.section 
+                className="mb-6"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
+                  <span className="w-4 h-px bg-white/10" />
+                  Modules · Toggle to customize
+                </p>
+                <div className="space-y-2">
+                  {Object.values(PROMPT_MODULES).map((mod) => (
+                    <button
+                      key={mod.id}
+                      onClick={() => toggleModule(mod.id)}
+                      className={`w-full p-4 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
+                        modules[mod.id] 
+                          ? 'bg-white/10 border-[#f5c518]/30' 
+                          : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
+                      } border`}
+                    >
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        modules[mod.id] 
+                          ? 'bg-[#f5c518] border-[#f5c518]' 
+                          : 'border-white/20'
+                      }`}>
+                        {modules[mod.id] && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="text-black text-xs"
+                          >
+                            ✓
+                          </motion.span>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <span className={`text-sm font-medium block ${modules[mod.id] ? 'text-white' : 'text-white/50'}`}>
+                          {mod.label}
+                        </span>
+                        <span className="text-[10px] text-white/30">{mod.description}</span>
+                      </div>
+                      {mod.id.startsWith('+') && (
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#ff6b35]/20 text-[#ff6b35]">
+                          ADD-ON
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </motion.section>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Output Section - Always Visible */}
         <motion.section 
           className="mb-6"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, delay: 0.3 }}
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-[10px] tracking-widest uppercase text-white/40 flex items-center gap-2">
               <span className="w-4 h-px bg-white/10" />
               Prompt Preview
             </p>
-            <span className="font-mono text-[10px] text-white/30 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
-              {charCount.toLocaleString()} chars
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] text-[#f5c518] bg-[#f5c518]/10 px-2 py-1 rounded-full">
+                ~{tokenCount} tokens
+              </span>
+              <span className="font-mono text-[10px] text-white/30 bg-white/5 px-2 py-1 rounded-full border border-white/5">
+                {charCount.toLocaleString()} chars
+              </span>
+            </div>
           </div>
           <div className="glass rounded-2xl p-5">
             <pre className="font-mono text-[11px] leading-relaxed text-white/60 whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto">
-              {getPrompt()}
+              {buildPrompt()}
             </pre>
           </div>
         </motion.section>
@@ -729,7 +1113,7 @@ export default function MarkyPromptBuilder() {
           className="pt-6 border-t border-white/5"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
           <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
             <span className="w-4 h-px bg-white/10" />
@@ -750,63 +1134,49 @@ export default function MarkyPromptBuilder() {
         </motion.section>
       </div>
 
-      {/* Fixed CTA Buttons */}
+      {/* Fixed Quick Actions Toolbar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-safe-bottom bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent">
-        <div className="max-w-md mx-auto flex gap-3">
+        <div className="max-w-md mx-auto">
+          {/* Secondary Actions Row */}
+          <div className="flex gap-2 mb-3">
+            <motion.button
+              onClick={() => copyToClipboard(true)}
+              className="flex-1 py-2.5 rounded-xl font-medium text-xs transition-all duration-300 bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
+              whileTap={{ scale: 0.98 }}
+            >
+              {copiedMd ? '✓ Copied MD!' : '📋 Markdown'}
+            </motion.button>
+            <motion.button
+              onClick={copyUrlToClipboard}
+              className="flex-1 py-2.5 rounded-xl font-medium text-xs transition-all duration-300 bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
+              whileTap={{ scale: 0.98 }}
+            >
+              🔗 Copy URL
+            </motion.button>
+            <motion.button
+              onClick={savePrompt}
+              className="flex-1 py-2.5 rounded-xl font-medium text-xs transition-all duration-300 bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
+              whileTap={{ scale: 0.98 }}
+            >
+              {saved ? '✓ Saved!' : '☆ Save'}
+            </motion.button>
+          </div>
+          
+          {/* Primary Action */}
           <motion.button
-            onClick={savePrompt}
-            className="flex-1 py-4 rounded-2xl font-semibold text-sm tracking-wide transition-all duration-300 bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
-            whileTap={{ scale: 0.98 }}
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {saved ? '✓ Saved!' : '☆ Save'}
-          </motion.button>
-          <motion.button
-            onClick={copyToClipboard}
-            className={`flex-[2] py-4 rounded-2xl font-semibold text-base tracking-wide relative overflow-hidden transition-all duration-300 ${
+            onClick={() => copyToClipboard(false)}
+            className={`w-full py-4 rounded-2xl font-semibold text-base tracking-wide relative overflow-hidden transition-all duration-300 ${
               copied ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-gold'
             } text-black`}
             whileTap={{ scale: 0.98 }}
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
               <span className="text-lg">{copied ? '✓' : '⎘'}</span>
-              <span>{copied ? (task ? 'Copied!' : 'Copied!') : 'Copy Prompt'}</span>
+              <span>{copied ? 'Copied to Clipboard!' : 'Copy Prompt'}</span>
             </span>
           </motion.button>
         </div>
       </div>
-
-      {/* Tooltip Modal */}
-      <AnimatePresence>
-        {activeTooltip && TOOLTIPS[activeTooltip as keyof typeof TOOLTIPS] && (
-          <>
-            <motion.div
-              className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setActiveTooltip(null)}
-            />
-            <motion.div
-              className="fixed z-[201] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-[340px] glass rounded-3xl p-6 border border-white/5"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-            >
-              <button onClick={() => setActiveTooltip(null)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:bg-white/10 transition-colors">×</button>
-              <span className="text-[13px] font-semibold tracking-wide text-[#f5c518] block mb-3 pb-3 border-b border-white/10">{TOOLTIPS[activeTooltip as keyof typeof TOOLTIPS].badge}</span>
-              <p className="text-[13px] leading-relaxed text-white/60">{TOOLTIPS[activeTooltip as keyof typeof TOOLTIPS].body}</p>
-              <span className="inline-block mt-4 text-[10px] tracking-wide uppercase text-[#ff6b35] bg-[#ff6b35]/10 border border-[#ff6b35]/20 px-3 py-1.5 rounded-full">{TOOLTIPS[activeTooltip as keyof typeof TOOLTIPS].tag}</span>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
 
       {/* History Panel */}
       <HistoryPanel
@@ -815,6 +1185,19 @@ export default function MarkyPromptBuilder() {
         onSelect={selectFromHistory}
         onRefresh={fetchFavoritesCount}
       />
+
+      {/* Preset Modal */}
+      <AnimatePresence>
+        {presetModalOpen && (
+          <PresetModal
+            isOpen={presetModalOpen}
+            onClose={() => setPresetModalOpen(false)}
+            onSave={savePreset}
+            onLoad={loadPreset}
+            presets={presets}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

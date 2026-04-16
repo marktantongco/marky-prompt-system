@@ -1,106 +1,107 @@
-<div align="center">
+# MARKY PROMPT SYSTEM — GLM Edition
 
-# MARKY PROMPT SYSTEM
+> **The ultimate AI prompt builder for GLM (z.chat) and beyond.**
+> Modular, customizable, and designed for power users who demand precision.
 
-### AI Prompt Builder for GLM — Ultra-Modern Gen-Z PWA
-
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma)](https://prisma.io/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-
-**Strategy · Code · Research · Copywriting**
-
-A premium, ultra-modern Progressive Web App for generating optimized AI prompts. Built with Next.js 16, featuring kinetic typography, glassmorphism, and liquid gradients.
-
-[🚀 Live Demo](https://marktantongco.github.io/marky-prompt-system/) · [📸 Screenshots](#screenshots) · [⚡ Features](#features) · [🛠 Installation](#installation)
-
-</div>
+[![Version](https://img.shields.io/badge/version-3.4--GLM-blueviolet)](https://github.com/marktantongco/marky-prompt-system)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?logo=tailwindcss)](https://tailwindcss.com/)
 
 ---
 
-## ⚡ Features
+## 🚀 Features
 
-### 🎯 Core Functionality
+### 🧩 Modular Prompt System
+- **Toggleable Modules**: Enable/disable individual prompt components
+- **Dynamic Assembly**: Prompts update in real-time based on configuration
+- **Add-on Modules**: +Code, +Design, +Copywriting extensions
 
-| Feature | Description |
-|---------|-------------|
-| **Base Mode** | Strategy, code, research, planning prompts |
-| **Copywriting Mode** | Captions, emails, sales, persuasion prompts |
-| **3 Variants** | Master (full), GLM Native (optimized), Concise (minimal) |
-| **3 Tones** | Faith 🙏, Insurance 🛡️, Brand 🎯 |
-| **Task Input** | Append custom tasks to any prompt |
-| **One-Tap Copy** | Copy full prompt + task to clipboard |
+### ⚡ Quick Actions Toolbar
+- **📋 Copy Prompt**: One-click copy to clipboard
+- **📋 Copy as Markdown**: Perfect for Cursor, Claude Projects, Notion
+- **🔗 Copy URL**: Share your exact configuration via URL parameters
+- **💾 Save Preset**: Store custom configurations for reuse
 
-### 💾 Data Persistence
+### 📊 Live Token Counter
+- Real-time token estimation (~4 chars per token)
+- Character count display
+- Module count tracking
 
-| Feature | Description |
-|---------|-------------|
-| **Prompt History** | Auto-saved prompts with SQLite database |
-| **Favorites** | Star prompts for quick access |
-| **History Panel** | Slide-out panel with all saved prompts |
-| **Restore** | One-tap to reload any saved configuration |
+### 🎨 Interactive Mode Cards
+- Hover previews for each mode variant
+- Visual feedback with gold accent animations
+- Tag-based descriptions (Most Explicit, Most Natural, Fastest)
 
-### 🎨 Design System
-
-Built with the **8-Layer Prompt Architecture** from promptc OS:
-
-- **Kinetic Typography** — Animated logo with gold glow effect
-- **Glassmorphism** — Frosted glass cards with `backdrop-filter: blur(20px)`
-- **Liquid Gradients** — Floating ambient blobs with 20s animation cycle
-- **Neon Accent Sparse** — Gold `#f5c518` + Amber `#ff6b35` on `#050505` void
-- **Micro-interactions** — Framer Motion animations on every interaction
-- **Ambient Motion** — Living background with particle effects
-- **Dark-mode Native** — Designed for dark first, pure black background
-- **Typography-first** — Bold Space Grotesk + JetBrains Mono for code
-
-### 📱 PWA Features
-
-- ✅ Installable on iOS, Android, Desktop
-- ✅ Offline-capable with service worker
-- ✅ Custom app icons (16px - 512px)
-- ✅ iOS splash screens
-- ✅ Safe area support (notch-friendly)
-- ✅ 60fps animation budget
+### 🎭 Dual Mode System
+- **Base Mode**: Strategy, Code, Research
+  - Master (Full structured ruleset)
+  - GLM Native (Optimized for GLM's reasoning)
+  - Concise (Shortest token count)
+- **Copywriting Mode**: Captions, Emails, Sales
+  - Faith (@markytanky) - Warm, conviction-driven
+  - Insurance (Pacific Cross) - Trust-first, protective
+  - Brand (LinkedIn) - Direct, honest, story-led
 
 ---
 
-## 📸 Screenshots
+## 📱 PWA Support
 
-<div align="center">
+MARKY is a fully installable Progressive Web App:
 
-| Main Interface | History Panel | Copy Mode |
-|:--------------:|:-------------:|:---------:|
-| ![Main Interface showing dark mode with gold accents, kinetic typography logo, and glassmorphism cards](https://via.placeholder.com/200x400/050505/f5c518?text=Main+UI) | ![History Panel with saved prompts and favorites](https://via.placeholder.com/200x400/050505/f5c518?text=History) | ![Copywriting mode with tone selection](https://via.placeholder.com/200x400/050505/f5c518?text=Copy+Mode) |
-
-</div>
+- **Offline Support**: Service worker caching
+- **Mobile Install**: Add to home screen
+- **Native Feel**: Safe area support, smooth animations
 
 ---
 
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
 
 | Category | Technology |
 |----------|------------|
 | **Framework** | Next.js 16 (App Router) |
-| **Language** | TypeScript 5 |
 | **Styling** | Tailwind CSS 4 |
-| **Animations** | Framer Motion |
-| **Database** | SQLite (Prisma ORM) |
-| **UI Components** | shadcn/ui |
-| **Icons** | Lucide Icons |
-| **Fonts** | Space Grotesk, JetBrains Mono |
+| **Animation** | Framer Motion |
+| **Database** | Prisma + SQLite |
+| **Design** | Glassmorphism, Kinetic Typography |
+| **PWA** | Service Worker, Web App Manifest |
 
 ---
 
-## 📦 Installation
+## 🏗️ Project Structure
+
+```
+marky-prompt-system/
+├── src/
+│   ├── app/
+│   │   ├── page.tsx          # Main prompt builder component
+│   │   ├── layout.tsx        # Root layout with fonts
+│   │   ├── globals.css       # Design system & animations
+│   │   └── api/
+│   │       └── prompts/
+│   │           └── route.ts  # Prompt history API
+│   └── lib/
+│       └── prisma.ts         # Database client
+├── prisma/
+│   └── schema.prisma         # Database schema
+├── public/
+│   ├── manifest.json         # PWA manifest
+│   └── icons/                # App icons
+├── MASTER_REFERENCE.md       # Prompt engineering library
+├── .cursorrules              # AI instructions
+└── README.md                 # This file
+```
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- Bun or npm
+- npm or yarn
 
-### Quick Start
+### Installation
 
 ```bash
 # Clone the repository
@@ -108,147 +109,158 @@ git clone https://github.com/marktantongco/marky-prompt-system.git
 cd marky-prompt-system
 
 # Install dependencies
-bun install
+npm install
 
 # Set up database
-bun run db:push
+npx prisma generate
+npx prisma db push
 
-# Start development server
-bun run dev
+# Run development server
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## 📖 Usage Guide
+
+### Building a Prompt
+
+1. **Click "Build Your System Prompt"** to open the builder
+2. **Select Mode**: Base (Strategy/Code) or Copywriting
+3. **Choose Variant/Tone**: Based on your use case
+4. **Toggle Modules**: Enable only what you need
+5. **Add Task** (optional): Specific instruction for this session
+6. **Copy Prompt**: Use the quick actions toolbar
+
+### Sharing Configurations
+
+Click **🔗 Copy URL** to generate a shareable link with your current configuration embedded in URL parameters:
+
+```
+https://yoursite.com/?mode=base&variant=glm&task=Write%20a%20caption
+```
+
+### Saving Presets
+
+1. Click the **📂** icon in the header
+2. Enter a name (e.g., "My Coding Setup")
+3. Presets are saved to localStorage
+4. Load anytime from the same modal
+
+---
+
+## 🎨 Design System
+
+### Colors
+
+| Name | Hex | Usage |
+|------|-----|-------|
+| Void | `#050505` | Background |
+| Gold | `#f5c518` | Primary accent |
+| Amber | `#ff6b35` | Secondary accent |
+| Surface | `rgba(15, 15, 17, 0.85)` | Glass panels |
+
+### Typography
+
+- **Display**: Space Grotesk
+- **Body**: Inter
+- **Mono**: JetBrains Mono
+
+### Effects
+
+- **Glassmorphism**: Frosted glass panels with backdrop blur
+- **Kinetic Typography**: Text animations on state changes
+- **Liquid Gradients**: Smooth color transitions
+- **Micro-interactions**: Hover, tap, and scroll animations
+
+---
+
+## 🔧 Configuration
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file:
 
 ```env
-DATABASE_URL="file:./db/custom.db"
+DATABASE_URL="file:./dev.db"
+```
+
+### Customizing Prompts
+
+Edit the `PROMPT_MODULES` object in `src/app/page.tsx`:
+
+```typescript
+const PROMPT_MODULES: Record<string, ModuleConfig> = {
+  customModule: {
+    id: 'customModule',
+    label: 'My Custom Module',
+    description: 'Does something special',
+    enabled: false,
+    content: `CUSTOM RULES:
+- Rule 1
+- Rule 2`
+  }
+}
 ```
 
 ---
 
-## 📁 Project Structure
+## 📚 MASTER_REFERENCE.md
 
-```
-marky-prompt-system/
-├── prisma/
-│   └── schema.prisma          # Database schema
-├── public/
-│   ├── manifest.json          # PWA manifest
-│   ├── icon-192.png           # App icons
-│   └── icon-512.png
-├── src/
-│   ├── app/
-│   │   ├── api/
-│   │   │   └── prompts/       # REST API routes
-│   │   ├── globals.css        # Design system
-│   │   ├── layout.tsx         # Root layout
-│   │   └── page.tsx           # Main component
-│   └── lib/
-│       └── db.ts              # Prisma client
-├── download/
-│   └── pwa/                   # Standalone PWA files
-├── MASTER_REFERENCE.md        # promptc OS reference
-└── README.md
-```
+This project includes a comprehensive prompt engineering library:
+
+- **8-Layer Prompt Architecture**: ROLE → CONTEXT → OBJECTIVE → CONSTRAINTS → AESTHETIC → PLANNING → OUTPUT → REFINEMENT
+- **Animal Thinking Modes**: Rabbit, Owl, Ant, Eagle, Dolphin, Beaver, Elephant
+- **Enhancement Protocols**: Self-refinement loops, Chain-of-thought
+- **Design Vocabulary**: glassmorphism, brutalist ui, kinetic typography, etc.
+- **Quality Checklists**: Structure, Design, Technical, Quality criteria
 
 ---
 
-## 🎮 Usage
+## 🤝 Contributing
 
-### Building Prompts
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. **Select Mode**: Choose Base (strategy/code) or Copywriting (content)
-2. **Choose Variant/Tone**: Pick your preferred style
-3. **Add Task**: Optionally append your specific task
-4. **Copy**: One-tap copy to clipboard
-
-### Managing History
-
-1. Click the **⏱ History** icon in the header
-2. View all saved prompts
-3. Filter by **Favorites** using the toggle
-4. **Use** any prompt to restore it
-5. **★** to favorite, **Delete** to remove
-
----
-
-## 🎨 Design Tokens
-
-```css
-/* Colors */
---void: #050505;
---gold: #f5c518;
---amber: #ff6b35;
---glass: rgba(255, 255, 255, 0.03);
-
-/* Gradients */
---gradient-gold: linear-gradient(135deg, #f5c518 0%, #ff6b35 100%);
-
-/* Typography */
---font-display: 'Space Grotesk', sans-serif;
---font-mono: 'JetBrains Mono', monospace;
-
-/* Animation */
---ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
---ease-liquid: cubic-bezier(0.65, 0, 0.35, 1);
-```
-
----
-
-## 📝 Prompt Templates
-
-### Base Mode Variants
-
-| Variant | Use Case |
-|---------|----------|
-| **Master** | Full structured ruleset — explicit, detailed |
-| **GLM Native** | Optimized for GLM's reasoning — natural, fluid |
-| **Concise** | Minimal tokens — fast, essential only |
-
-### Copywriting Tones
-
-| Tone | Use Case |
-|------|----------|
-| **🙏 Faith** | Spiritual community, motivational content |
-| **🛡️ Insurance** | IC Philippines compliant, trust-first |
-| **🎯 Brand** | LinkedIn, thought leadership, personal brand |
-
----
-
-## 🔧 Scripts
-
-```bash
-bun run dev        # Start development server
-bun run build      # Production build
-bun run lint       # Run ESLint
-bun run db:push    # Push schema changes
-bun run db:generate # Generate Prisma client
-```
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
-MIT License — feel free to use for personal or commercial projects.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Credits
+## 🙏 Acknowledgments
 
-- **Design System**: Based on [promptc OS](https://github.com/marktantongco/promptc)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Fonts**: [Google Fonts](https://fonts.google.com/)
+- Built with [Next.js](https://nextjs.org/)
+- Styled with [Tailwind CSS](https://tailwindcss.com/)
+- Animated with [Framer Motion](https://www.framer.com/motion/)
+- Icons and emojis for visual flair
 
 ---
 
-<div align="center">
+## 📞 Support
 
-**Built with ❤️ by [@markytanky](https://github.com/marktantongco)**
+- **Issues**: [GitHub Issues](https://github.com/marktantongco/marky-prompt-system/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/marktantongco/marky-prompt-system/discussions)
 
-[⬆ Back to Top](#marky-prompt-system)
+---
 
-</div>
+<p align="center">
+  <strong>MARKY PROMPT SYSTEM</strong><br>
+  <span style="color: #f5c518">Build better prompts. Get better results.</span>
+</p>
