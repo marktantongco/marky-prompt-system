@@ -25,6 +25,7 @@ interface ModuleConfig {
   description: string
   enabled: boolean
   content: string
+  category?: 'core' | 'addon' | 'skill'
 }
 
 interface Preset {
@@ -32,154 +33,283 @@ interface Preset {
   name: string
   createdAt: string
   config: {
-    mode: 'base' | 'copy'
-    variant: 'master' | 'glm' | 'concise'
-    tone: 'faith' | 'insurance' | 'personal'
+    mode: 'master' | 'glm' | 'concise'
     modules: Record<string, boolean>
     task: string
   }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PROMPT MODULES - Modular System
+// MASTER PROMPT v3.5 - MODULAR SYSTEM
 // ═══════════════════════════════════════════════════════════════
 
 const PROMPT_MODULES: Record<string, ModuleConfig> = {
+  // CORE MODULES (Always on in Master mode)
   role: {
     id: 'role',
     label: 'Role Definition',
     description: 'Who the AI acts as',
     enabled: true,
-    content: `You are my expert AI assistant, business partner, and creative strategist.
-Your job: give me what I truly need — not just what I asked for.`
+    category: 'core',
+    content: `You are my expert AI partner, business strategist, and creative technologist.
+Act in MY best interest. Identify what I truly need — not just what I asked.`
   },
   coreRules: {
     id: 'coreRules',
     label: 'Core Rules',
     description: '10 fundamental operating principles',
     enabled: true,
-    content: `OPERATING PRINCIPLES:
-1. Zero fluff. Every word earns its place.
-2. Code must be complete and runnable — never pseudocode or placeholders.
-3. When I have multiple options, rank by impact. Highest first.
-4. If a better or faster approach exists, name it — even if I didn't ask.
-5. Default to expert level. Adjust only if I say otherwise.
-6. Vague request? State your assumption clearly, then proceed.
-7. Spot a risk? Name it in one sentence, then give me the best path forward.
-8. Never ask me to repeat context already in this conversation.
-9. Format for fast scanning: headers, bullets, bold key terms.
-10. End every complex answer with ⚡ Next Step.`
+    category: 'core',
+    content: `## ⚡ CORE RULES
+
+1. No filler. No fluff. No disclaimers. No "as an AI" statements.
+2. WORKING code only — never pseudocode. Test logic mentally before outputting.
+3. Rank by impact. Lead with the highest-leverage action or idea.
+4. Always flag a better or faster way if one exists. Advocacy is always on.
+5. Assume expert-level. On vague requests: assume smartly, state it, proceed.
+6. Risky? Flag it in one line — then execute unless I say stop.
+7. Never ask me to repeat context. Use conversation history. Every message stands alone.
+8. Format for scanability: headers, bullets, bold, whitespace.
+9. Short sentences. Simple words — 4th grade level. One idea per sentence.
+10. Quality over speed. Push back if you have a strong reason.`
+  },
+  hardStops: {
+    id: 'hardStops',
+    label: 'Hard Stops',
+    description: 'Non-negotiable constraints',
+    enabled: true,
+    category: 'core',
+    content: `## 🛡️ HARD STOPS
+
+- No placeholder text. Never write TODO, "[your code]", or "insert here".
+- No apologies for limitations. Solve it or pivot.
+- Never restate my request. Jump straight to the solution.
+- No vague language. Not "might", "could", or "perhaps". Be direct.`
+  },
+  responseFramework: {
+    id: 'responseFramework',
+    label: 'Response Framework',
+    description: 'Structure for complex tasks',
+    enabled: true,
+    category: 'core',
+    content: `## 🧠 RESPONSE FRAMEWORK (Complex Tasks Only)
+
+1. **Structure First** — outline silently, then execute.
+2. **Impact-Rank** — lead with the 80/20 action or insight.
+3. **Show, Don't Tell** — working code > explanation. Artifacts > prose.
+4. **Close with Momentum** — ⚡ **Next Step**: max 2 sentences, one action.
+5. **Close with Insight** — ✨ **3 Suggestions** — exactly 3. Rules:
+   - Genuinely insightful. Not obvious. Not already in the response.
+   - Commonly overlooked — what you'd miss without a second perspective.
+   - Tied to long-term success, not just the current task.
+   - Format: **bold label** + one tight sentence max.
+   - Rotate: Tactical / Strategic / Reframe or Contrarian. No repeats.
+
+Skip closing blocks on one-liners, confirmations, and simple factual replies.`
   },
   advocacy: {
     id: 'advocacy',
     label: 'Advocacy Mode',
     description: 'AI acts as your advocate',
     enabled: true,
-    content: `ADVOCATE FOR ME:
-- Flag mistakes before I make them.
-- Push back if my request works against my long-term goals.
-- Always optimize for lasting success — not just the immediate task.`
+    category: 'core',
+    content: `## 🚀 ADVOCACY
+
+- Warn me before I make a mistake.
+- Suggest better approaches even when I didn't ask.
+- Optimize for my long-term success — not just task completion.
+- Push back if you have a strong reason. Quality over speed, always.`
   },
-  writingStyle: {
-    id: 'writingStyle',
-    label: 'Writing Style',
+  writingRules: {
+    id: 'writingRules',
+    label: 'Writing Rules',
     description: 'Voice and tone guidelines',
     enabled: true,
-    content: `MY WRITING VOICE (mirror this in all outputs):
-- Short sentences. One idea each.
-- Plain language. Anyone can understand it.
-- Direct and personal — like writing to one person.
-- Vary sentence rhythm. Short punches. Then a slightly longer one for flow.`
+    category: 'core',
+    content: `## ✍️ WRITING RULES
+
+- Short sentences. Every word earns its place.
+- 4th grade reading level. One idea per sentence.
+- Write to ONE person. Use "you" — never corporate speak or brand generics.
+- Think deeply. Write clearly. Let ideas lead.
+- Swipe file mindset. Reference proven ads, emails, hooks, captions for copy.
+- Pattern-match from what works. Don't invent when a proven format exists.
+- Format for scanability — headers, bullets, bold, whitespace.`
   },
-  skills: {
-    id: 'skills',
-    label: 'Skills Library',
+  skillLibrary: {
+    id: 'skillLibrary',
+    label: 'Skill Library',
     description: 'External skill references',
     enabled: true,
-    content: `SKILLS — FETCH CONTENT BEFORE USING:
-- GSAP animations → https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
-- Photography / AI image prompts → https://marktantongco.github.io/aiskills-photog/skills.md
-- Vercel / deployment → https://skills.sh/`
+    category: 'core',
+    content: `## 🧰 SKILL LIBRARY
+
+Fetch before relevant tasks. Pull the reference first — never guess.
+
+**Primary:**
+- Agents + Workflows: https://raw.githubusercontent.com/marktantongco/ai-skills-library/main/AGENTS.md
+- GSAP Animations: https://raw.githubusercontent.com/xerxes-on/gsap-animation-skill/main/gsap-animations.md
+- Photography AI: https://marktantongco.github.io/aiskills-photog/skills.md
+- NVIDIA Build API: https://raw.githubusercontent.com/marktantongco/ai-skills-library/main/nvidia-build.md
+
+**Secondary:**
+- Frontend Design + UI/UX Pro Max + Playwright CLI: https://skills.sh/`
   },
+  specialCommands: {
+    id: 'specialCommands',
+    label: 'Special Commands',
+    description: '//clear, //focus, //audit, //nvidia',
+    enabled: true,
+    category: 'core',
+    content: `## 🔄 SPECIAL COMMANDS
+
+- \`//clear\` — Reset all context. Next message = new session start.
+- \`//focus [topic]\` — Set project context for this session only.
+  Example: \`//focus Gumroad launch\` · \`//focus Pacific Cross GTM\`
+- \`//audit\` — Review this prompt. Flag dead rules. Suggest cuts or upgrades.
+- \`//nvidia\` — Inject the full NVIDIA Build API integration (token, sample code, usage).`
+  },
+  context: {
+    id: 'context',
+    label: 'powerUP Context',
+    description: 'Project and brand context',
+    enabled: true,
+    category: 'core',
+    content: `## 💡 YOUR CONTEXT
+
+Building under **powerUP**: AI tools, digital products, web experiences, monetization systems.
+
+- Stack: React/Vite · Next.js 15 · WebGPU/R3F · GSAP · Vercel
+- Aesthetic: Neo-Brutalist — #FFEA00 + void black · Syne + Space Mono
+- Voice: Faith-backed · empowerment-toned · direct · actionable
+
+Use \`//focus [topic]\` to inject current project context per session.
+Every response is an investment in long-term success.`
+  },
+  
+  // ADD-ON MODULES
   codeMode: {
     id: 'codeMode',
     label: '+Code Module',
     description: 'Enhanced coding rules',
     enabled: false,
-    content: `CODE MODE: ON
+    category: 'addon',
+    content: `## 💻 CODE MODE: ON
+
 - Always provide complete, runnable code — no placeholders
 - Include error handling by default
 - Add type definitions for TypeScript
 - Include comments for complex logic only
 - Follow clean code principles
-- Consider edge cases proactively`
+- Consider edge cases proactively
+- Test logic mentally before outputting`
   },
   designMode: {
     id: 'designMode',
     label: '+Design Module',
     description: 'UI/UX design guidelines',
     enabled: false,
-    content: `DESIGN MODE: ON
+    category: 'addon',
+    content: `## 🎨 DESIGN MODE: ON
+
 - Use Tailwind CSS for styling
 - Mobile-first responsive design
 - WCAG AA accessibility minimum
 - 60fps animation budget
 - Semantic HTML structure
-- Support dark mode by default`
+- Support dark mode by default
+- Neo-Brutalist aesthetic: #FFEA00 + void black`
   },
   copyMode: {
     id: 'copyMode',
     label: '+Copywriting Module',
     description: 'Copywriting frameworks',
     enabled: false,
-    content: `COPYWRITING MODE: ON
+    category: 'addon',
+    content: `## ✍️ COPYWRITING MODE: ON
+
 - Lead with emotion. Logic closes. Emotion opens.
 - Open with the problem, not the product.
 - One big idea per piece. No cramming.
 - Use "you" more than "I" or "we."
-- Make the CTA feel like relief — not pressure.`
+- Make the CTA feel like relief — not pressure.
+- Swipe file mindset: reference proven formats.
+- AIDA, PAS, 4Ps — choose framework, execute.`
+  },
+  
+  // SKILL MODULES
+  nvidiaSkill: {
+    id: 'nvidiaSkill',
+    label: '🤖 NVIDIA Build API',
+    description: 'Llama 4 + Nemotron integration',
+    enabled: false,
+    category: 'skill',
+    content: `## 📦 NVIDIA BUILD API SKILL
+
+**API Token:** \`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\`
+
+**Endpoint:** \`https://integrate.api.nvidia.com/v1/chat/completions\`
+
+**Available Models:**
+- \`meta/llama-4-maverick-17b-128e-instruct\` — Llama 4 Maverick
+- \`nvidia/nemotron-3-8b-instruct\` — Nemotron 3 (FREE)
+
+**Sample Python Code:**
+\`\`\`python
+import requests
+
+invoke_url = "https://integrate.api.nvidia.com/v1/chat/completions"
+stream = False
+
+headers = {
+  "Authorization": "Bearer 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",
+  "Accept": "text/event-stream" if stream else "application/json"
+}
+
+payload = {
+  "model": "nvidia/nemotron-3-8b-instruct",  # FREE model
+  "messages": [{"role": "user", "content": "Your prompt here"}],
+  "max_tokens": 512,
+  "temperature": 0.7,
+  "top_p": 1.0,
+  "stream": stream
+}
+
+response = requests.post(invoke_url, headers=headers, json=payload)
+print(response.json())
+\`\`\`
+
+**Usage Note:** Token is valid and ready. Write production-ready integration code.`
   }
 }
 
-const COPY_TONE_MODULES: Record<string, { prefix: string; tone: string; rules: string }> = {
-  faith: {
-    prefix: 'COPYWRITING MODE: ON',
-    tone: 'TONE: Faith & Empowerment — warm, conviction-driven, hopeful.',
-    rules: `BEFORE writing, answer these internally:
-- What's the #1 thing my audience wants right now?
-- What keeps them up at night?
-- What will they feel when this problem is solved?
-- What happens if they don't act?`
+// Mode configurations
+const MODE_CONFIGS = {
+  master: {
+    label: 'Master',
+    number: '1',
+    emoji: '⚡',
+    tag: 'Full System',
+    preview: 'Complete prompt with all sections active.',
+    enabledModules: ['role', 'coreRules', 'hardStops', 'responseFramework', 'advocacy', 'writingRules', 'skillLibrary', 'specialCommands', 'context']
   },
-  insurance: {
-    prefix: 'COPYWRITING MODE: ON',
-    tone: 'TONE: Insurance Sales — trust-first, calm urgency, protective. IC Philippines compliant.',
-    rules: `COPY RULES:
-- Never make specific financial promises or guarantees.
-- Always position protection as care — not fear-mongering.
-- Build trust through transparency.`
+  glm: {
+    label: 'GLM Optimized',
+    number: '2',
+    emoji: '🧠',
+    tag: 'GLM Native',
+    preview: 'Core rules + Advocacy + Writing Rules. Stripped for GLM context limits.',
+    enabledModules: ['role', 'coreRules', 'hardStops', 'advocacy', 'writingRules']
   },
-  personal: {
-    prefix: 'COPYWRITING MODE: ON',
-    tone: 'TONE: Personal Brand — direct, honest, story-led. LinkedIn & thought leadership.',
-    rules: `COPY RULES:
-- Be vulnerable — share the lesson, not just the win.
-- Specific beats generic. Numbers, dates, names win.
-- Connect the personal to the universal.`
+  concise: {
+    label: 'Concise',
+    number: '3',
+    emoji: '🚀',
+    tag: 'Fastest',
+    preview: 'Only Core Rules + Hard Stops + Response Framework.',
+    enabledModules: ['role', 'coreRules', 'hardStops', 'responseFramework']
   }
 }
-
-const MODE_CARDS = [
-  { id: 'master', number: '1', label: 'Master', emoji: '⚡', tag: 'Most Explicit', preview: 'Full structured ruleset with every instruction clearly labelled.' },
-  { id: 'glm', number: '2', label: 'GLM Native', emoji: '🧠', tag: 'Most Natural', preview: 'Optimized for GLM\'s reasoning architecture.' },
-  { id: 'concise', number: '3', label: 'Concise', emoji: '🚀', tag: 'Fastest', preview: 'Stripped to essentials. Shortest token count.' }
-]
-
-const TONE_CARDS = [
-  { id: 'faith', emoji: '🙏', label: 'Faith', tag: '@markytanky', preview: 'Warm. Conviction-driven. Hopeful.' },
-  { id: 'insurance', emoji: '🛡️', label: 'Insurance', tag: 'Pacific Cross', preview: 'Trust-first. Calm urgency. Protective.' },
-  { id: 'personal', emoji: '🎯', label: 'Brand', tag: 'LinkedIn', preview: 'Direct. Honest. Story-led.' }
-]
 
 // ═══════════════════════════════════════════════════════════════
 // UTILITY FUNCTIONS
@@ -334,7 +464,7 @@ function HistoryPanel({
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs bg-white/10 px-2 py-0.5 rounded-full">
-                          {item.mode === 'base' ? '⚡' : '✍️'} {item.variant || item.tone}
+                          {item.mode === 'master' ? '⚡' : item.mode === 'glm' ? '🧠' : '🚀'} {item.variant || item.mode}
                         </span>
                         <span className="text-[10px] text-white/30">{item.charCount} chars</span>
                       </div>
@@ -476,7 +606,7 @@ function PresetModal({
                   </div>
                   <div className="flex gap-2 mt-2">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50">
-                      {preset.config.mode === 'base' ? '⚡' : '✍️'} {preset.config.variant || preset.config.tone}
+                      {preset.config.mode}
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50">
                       {Object.values(preset.config.modules).filter(Boolean).length} modules
@@ -493,31 +623,199 @@ function PresetModal({
 }
 
 // ═══════════════════════════════════════════════════════════════
+// NVIDIA API PANEL
+// ═══════════════════════════════════════════════════════════════
+
+function NvidiaPanel({
+  isOpen,
+  onClose
+}: {
+  isOpen: boolean
+  onClose: () => void
+}) {
+  const [selectedModel, setSelectedModel] = useState('nvidia/nemotron-3-8b-instruct')
+  const [prompt, setPrompt] = useState('')
+  const [response, setResponse] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const testApi = async () => {
+    setLoading(true)
+    setResponse('')
+    
+    try {
+      const res = await fetch('/api/nvidia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [{ role: 'user', content: prompt || 'Hello, how are you?' }]
+        })
+      })
+      
+      const data = await res.json()
+      setResponse(JSON.stringify(data, null, 2))
+    } catch (e: any) {
+      setResponse(`Error: ${e.message}`)
+    }
+    
+    setLoading(false)
+  }
+
+  const copyCode = async () => {
+    const code = `import requests
+
+invoke_url = "https://integrate.api.nvidia.com/v1/chat/completions"
+
+headers = {
+  "Authorization": "Bearer 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",
+  "Accept": "application/json"
+}
+
+payload = {
+  "model": "${selectedModel}",
+  "messages": [{"role": "user", "content": "${prompt || 'Your prompt here'}"}],
+  "max_tokens": 512,
+  "temperature": 0.7
+}
+
+response = requests.post(invoke_url, headers=headers, json=payload)
+print(response.json())`
+    
+    await navigator.clipboard.writeText(code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <>
+      <motion.div
+        className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+      />
+      <motion.div
+        className="fixed z-[201] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-[500px] glass rounded-3xl p-6 border border-white/5 max-h-[80vh] overflow-y-auto"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+      >
+        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:bg-white/10 transition-colors">×</button>
+        
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-2xl">🤖</span>
+          <div>
+            <h3 className="text-lg font-bold text-white">NVIDIA Build API</h3>
+            <p className="text-xs text-white/40">Llama 4 + Nemotron 3 Super (FREE)</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {/* Model Selection */}
+          <div>
+            <label className="text-xs text-white/50 uppercase tracking-wide mb-2 block">Model</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setSelectedModel('nvidia/nemotron-3-8b-instruct')}
+                className={`p-3 rounded-xl text-left text-sm transition-all ${selectedModel === 'nvidia/nemotron-3-8b-instruct' ? 'bg-[#f5c518]/20 border-[#f5c518]/50 text-white' : 'bg-white/5 border-white/5 text-white/60'} border`}
+              >
+                <span className="block font-medium">Nemotron 3</span>
+                <span className="text-[10px] text-green-400">FREE</span>
+              </button>
+              <button
+                onClick={() => setSelectedModel('meta/llama-4-maverick-17b-128e-instruct')}
+                className={`p-3 rounded-xl text-left text-sm transition-all ${selectedModel === 'meta/llama-4-maverick-17b-128e-instruct' ? 'bg-[#f5c518]/20 border-[#f5c518]/50 text-white' : 'bg-white/5 border-white/5 text-white/60'} border`}
+              >
+                <span className="block font-medium">Llama 4 Maverick</span>
+                <span className="text-[10px] text-[#f5c518]">17B</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Prompt Input */}
+          <div>
+            <label className="text-xs text-white/50 uppercase tracking-wide mb-2 block">Test Prompt</label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Enter a test prompt..."
+              className="w-full h-24 bg-black/50 border border-white/10 rounded-xl p-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#f5c518]/50 resize-none"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={testApi}
+              disabled={loading}
+              className="flex-1 py-3 rounded-xl font-semibold bg-gradient-gold text-black disabled:opacity-50"
+            >
+              {loading ? 'Testing...' : '🧪 Test API'}
+            </button>
+            <button
+              onClick={copyCode}
+              className="py-3 px-4 rounded-xl font-medium bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
+            >
+              {copied ? '✓' : '📋'}
+            </button>
+          </div>
+
+          {/* Response */}
+          {response && (
+            <div>
+              <label className="text-xs text-white/50 uppercase tracking-wide mb-2 block">Response</label>
+              <pre className="bg-black/50 border border-white/10 rounded-xl p-4 text-xs text-white/60 overflow-x-auto max-h-48">
+                {response}
+              </pre>
+            </div>
+          )}
+
+          {/* Token Info */}
+          <div className="p-4 bg-white/5 rounded-xl">
+            <p className="text-xs text-white/40 mb-2">
+              <span className="text-[#f5c518]">⚠️</span> Token is embedded in prompt. For production, use environment variable.
+            </p>
+            <code className="text-[10px] text-white/30 break-all">
+              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
+            </code>
+          </div>
+        </div>
+      </motion.div>
+    </>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
 export default function MarkyPromptBuilder() {
   // Core state
-  const [mode, setMode] = useState<'base' | 'copy'>('base')
-  const [variant, setVariant] = useState<'master' | 'glm' | 'concise'>('master')
-  const [tone, setTone] = useState<'faith' | 'insurance' | 'personal'>('faith')
+  const [mode, setMode] = useState<'master' | 'glm' | 'concise'>('master')
   const [task, setTask] = useState('')
   
   // UI state
   const [copied, setCopied] = useState(false)
   const [copiedMd, setCopiedMd] = useState(false)
+  const [copiedPlain, setCopiedPlain] = useState(false)
   const [saved, setSaved] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [presetModalOpen, setPresetModalOpen] = useState(false)
+  const [nvidiaPanelOpen, setNvidiaPanelOpen] = useState(false)
   const [showBuilder, setShowBuilder] = useState(false)
   const [favoritesCount, setFavoritesCount] = useState(0)
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   
-  // Modules state
+  // Modules state - initialized based on mode
   const [modules, setModules] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
     Object.values(PROMPT_MODULES).forEach(m => {
-      initial[m.id] = m.enabled
+      initial[m.id] = MODE_CONFIGS.master.enabledModules.includes(m.id)
     })
     return initial
   })
@@ -527,7 +825,7 @@ export default function MarkyPromptBuilder() {
 
   // Load presets from localStorage
   useEffect(() => {
-    const savedPresets = localStorage.getItem('marky-presets')
+    const savedPresets = localStorage.getItem('marky-presets-v2')
     if (savedPresets) {
       try {
         setPresets(JSON.parse(savedPresets))
@@ -537,85 +835,78 @@ export default function MarkyPromptBuilder() {
     }
   }, [])
 
+  // Update modules when mode changes
+  useEffect(() => {
+    const config = MODE_CONFIGS[mode]
+    setModules(prev => {
+      const updated = { ...prev }
+      // Reset to mode defaults for core modules
+      Object.values(PROMPT_MODULES).forEach(m => {
+        if (m.category === 'core') {
+          updated[m.id] = config.enabledModules.includes(m.id)
+        }
+      })
+      return updated
+    })
+  }, [mode])
+
   // Build the prompt dynamically based on modules
   const buildPrompt = useCallback(() => {
     const parts: string[] = []
     
-    // For copy mode, use the tone-specific content
-    if (mode === 'copy') {
-      const toneData = COPY_TONE_MODULES[tone]
-      
-      if (modules.role) {
-        parts.push(PROMPT_MODULES.role.content)
-      }
-      
-      parts.push('')
-      parts.push(toneData.prefix)
-      parts.push(toneData.tone)
-      parts.push('')
-      parts.push(toneData.rules)
-      
-      if (modules.copyMode) {
-        parts.push('')
-        parts.push(PROMPT_MODULES.copyMode.content)
-      }
-    } else {
-      // Base mode - assemble from modules
-      if (modules.role) parts.push(PROMPT_MODULES.role.content)
-      if (modules.coreRules) {
-        parts.push('')
-        parts.push(PROMPT_MODULES.coreRules.content)
-      }
-      if (modules.advocacy) {
-        parts.push('')
-        parts.push(PROMPT_MODULES.advocacy.content)
-      }
-      if (modules.writingStyle) {
-        parts.push('')
-        parts.push(PROMPT_MODULES.writingStyle.content)
-      }
-      if (modules.skills) {
-        parts.push('')
-        parts.push(PROMPT_MODULES.skills.content)
-      }
-      if (modules.codeMode) {
-        parts.push('')
-        parts.push(PROMPT_MODULES.codeMode.content)
-      }
-      if (modules.designMode) {
-        parts.push('')
-        parts.push(PROMPT_MODULES.designMode.content)
-      }
-    }
+    // Add modules in order
+    const moduleOrder = ['role', 'coreRules', 'hardStops', 'responseFramework', 'advocacy', 'writingRules', 'skillLibrary', 'specialCommands', 'context', 'codeMode', 'designMode', 'copyMode', 'nvidiaSkill']
     
-    return parts.join('\n')
-  }, [mode, tone, modules])
+    moduleOrder.forEach(id => {
+      if (modules[id] && PROMPT_MODULES[id]) {
+        parts.push(PROMPT_MODULES[id].content)
+      }
+    })
+    
+    return parts.join('\n\n')
+  }, [modules])
 
   const getFinalPrompt = useCallback(() => {
     const base = buildPrompt()
-    return task.trim() ? `${base}\n\n---\n\nMY TASK:\n${task.trim()}` : base
+    return task.trim() ? `${base}\n\n---\n\n## 🎯 MY TASK\n\n${task.trim()}` : base
   }, [buildPrompt, task])
 
   // Token count
   const tokenCount = useMemo(() => estimateTokens(getFinalPrompt()), [getFinalPrompt])
   const charCount = getFinalPrompt().length
+  const moduleCount = Object.entries(modules).filter(([id, enabled]) => enabled && PROMPT_MODULES[id]).length
 
-  // Copy functions
-  const copyToClipboard = async (asMarkdown: boolean = false) => {
-    const text = asMarkdown 
-      ? `\`\`\`\n${getFinalPrompt()}\n\`\`\``
-      : getFinalPrompt()
+  // Copy functions - NO ALERTS, just visual feedback
+  const copyToClipboard = async (format: 'plain' | 'markdown' | 'url' = 'plain') => {
+    let text: string
+    
+    if (format === 'url') {
+      const params = new URLSearchParams()
+      params.set('mode', mode)
+      if (task) params.set('task', encodeURIComponent(task))
+      text = `${window.location.origin}${window.location.pathname}?${params.toString()}`
+    } else if (format === 'markdown') {
+      text = `\`\`\`\n${getFinalPrompt()}\n\`\`\``
+    } else {
+      text = getFinalPrompt()
+    }
     
     try {
       await navigator.clipboard.writeText(text)
-      if (asMarkdown) {
+      
+      // Visual feedback only - NO ALERTS
+      if (format === 'plain') {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      } else if (format === 'markdown') {
         setCopiedMd(true)
         setTimeout(() => setCopiedMd(false), 2000)
       } else {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+        setCopiedPlain(true)
+        setTimeout(() => setCopiedPlain(false), 2000)
       }
     } catch {
+      // Silent fail - use textarea fallback
       const textarea = document.createElement('textarea')
       textarea.value = text
       textarea.style.cssText = 'position:fixed;opacity:0'
@@ -623,39 +914,15 @@ export default function MarkyPromptBuilder() {
       textarea.select()
       document.execCommand('copy')
       document.body.removeChild(textarea)
-      if (asMarkdown) {
-        setCopiedMd(true)
-        setTimeout(() => setCopiedMd(false), 2000)
-      } else {
+      
+      if (format === 'plain') {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
       }
     }
   }
 
-  // Copy URL with state
-  const copyUrlToClipboard = async () => {
-    const params = new URLSearchParams()
-    params.set('mode', mode)
-    if (mode === 'base') {
-      params.set('variant', variant)
-    } else {
-      params.set('tone', tone)
-    }
-    if (task) params.set('task', encodeURIComponent(task))
-    
-    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`
-    
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      console.error('Failed to copy URL')
-    }
-  }
-
-  // Save to database
+  // Save to database - SILENT
   const savePrompt = async () => {
     try {
       await fetch('/api/prompts', {
@@ -663,8 +930,8 @@ export default function MarkyPromptBuilder() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           mode,
-          variant: mode === 'base' ? variant : null,
-          tone: mode === 'copy' ? tone : null,
+          variant: mode,
+          tone: null,
           task: task.trim() || null,
           prompt: getFinalPrompt(),
           charCount
@@ -686,22 +953,18 @@ export default function MarkyPromptBuilder() {
       createdAt: new Date().toISOString(),
       config: {
         mode,
-        variant,
-        tone,
         modules: { ...modules },
         task
       }
     }
     const updated = [...presets, newPreset]
     setPresets(updated)
-    localStorage.setItem('marky-presets', JSON.stringify(updated))
+    localStorage.setItem('marky-presets-v2', JSON.stringify(updated))
   }
 
   // Load preset
   const loadPreset = (preset: Preset) => {
     setMode(preset.config.mode)
-    setVariant(preset.config.variant)
-    setTone(preset.config.tone)
     setModules(preset.config.modules)
     setTask(preset.config.task)
   }
@@ -724,20 +987,16 @@ export default function MarkyPromptBuilder() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const urlMode = params.get('mode')
-    const urlVariant = params.get('variant')
-    const urlTone = params.get('tone')
     const urlTask = params.get('task')
     
-    if (urlMode === 'base' || urlMode === 'copy') setMode(urlMode)
-    if (urlVariant && ['master', 'glm', 'concise'].includes(urlVariant)) setVariant(urlVariant as typeof variant)
-    if (urlTone && ['faith', 'insurance', 'personal'].includes(urlTone)) setTone(urlTone as typeof tone)
+    if (urlMode && ['master', 'glm', 'concise'].includes(urlMode)) {
+      setMode(urlMode as typeof mode)
+    }
     if (urlTask) setTask(decodeURIComponent(urlTask))
   }, [])
 
   const selectFromHistory = (record: PromptRecord) => {
-    setMode(record.mode as 'base' | 'copy')
-    if (record.variant) setVariant(record.variant as 'master' | 'glm' | 'concise')
-    if (record.tone) setTone(record.tone as 'faith' | 'insurance' | 'personal')
+    if (record.mode) setMode(record.mode as typeof mode)
     if (record.task) setTask(record.task)
     setHistoryOpen(false)
   }
@@ -764,10 +1023,17 @@ export default function MarkyPromptBuilder() {
               <span className="absolute inset-0 blur-xl bg-gradient-gold opacity-30 -z-10" />
             </h1>
             <p className="text-[10px] tracking-widest uppercase text-white/40 mt-1 font-medium">
-              AI Prompt Builder · GLM
+              AI Prompt Builder · v3.5 Master
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setNvidiaPanelOpen(true)}
+              className="w-9 h-9 rounded-xl bg-[#76b900]/20 border border-[#76b900]/30 flex items-center justify-center text-[#76b900] hover:bg-[#76b900]/30 transition-all"
+              title="NVIDIA Build API"
+            >
+              <span className="text-base">🤖</span>
+            </button>
             <button
               onClick={() => setPresetModalOpen(true)}
               className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white/60 transition-all"
@@ -788,7 +1054,7 @@ export default function MarkyPromptBuilder() {
               )}
             </button>
             <span className="font-mono text-[9px] text-white/30 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
-              v3.4
+              v3.5
             </span>
           </div>
         </motion.header>
@@ -811,7 +1077,7 @@ export default function MarkyPromptBuilder() {
                   <div>
                     <span className="text-2xl block mb-2">⚡</span>
                     <span className="text-lg font-bold block mb-1">Build Your System Prompt</span>
-                    <span className="text-sm text-white/40">Configure modules, modes, and presets</span>
+                    <span className="text-sm text-white/40">Toggle modules · Configure modes · Save presets</span>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-[#f5c518]/10 flex items-center justify-center">
                     <span className="text-[#f5c518] text-2xl">→</span>
@@ -830,7 +1096,7 @@ export default function MarkyPromptBuilder() {
                   <span className="text-[10px] text-white/40 block mt-1">chars</span>
                 </div>
                 <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <span className="text-xl font-bold text-white">{Object.values(modules).filter(Boolean).length}</span>
+                  <span className="text-xl font-bold text-white">{moduleCount}</span>
                   <span className="text-[10px] text-white/40 block mt-1">modules</span>
                 </div>
               </div>
@@ -874,7 +1140,7 @@ export default function MarkyPromptBuilder() {
                   <textarea
                     value={task}
                     onChange={(e) => setTask(e.target.value)}
-                    placeholder="Type your task here...&#10;&#10;e.g. Write a caption for my Pacific Cross post"
+                    placeholder="Type your task here...&#10;&#10;e.g. Build a landing page for my SaaS"
                     className="w-full min-h-[100px] bg-black/50 border border-white/5 rounded-xl p-4 text-sm text-white placeholder:text-white/20 resize-none focus:outline-none focus:border-[#f5c518]/50 focus:ring-2 focus:ring-[#f5c518]/20 transition-all font-sans"
                   />
                 </div>
@@ -891,138 +1157,57 @@ export default function MarkyPromptBuilder() {
                   <span className="w-4 h-px bg-white/10" />
                   Mode
                 </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { id: 'base', emoji: '⚡', label: 'Base Mode', desc: 'Strategy · Code · Research' },
-                    { id: 'copy', emoji: '✍️', label: 'Copywriting', desc: 'Captions · Emails · Sales' }
-                  ].map((m) => (
-                    <button
-                      key={m.id}
-                      onClick={() => setMode(m.id as 'base' | 'copy')}
-                      className={`relative p-5 rounded-2xl text-left overflow-hidden transition-all duration-300 ${
-                        mode === m.id ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
-                      } border`}
+                <div className="grid grid-cols-3 gap-3">
+                  {Object.entries(MODE_CONFIGS).map(([id, config]) => (
+                    <div
+                      key={id}
+                      className="relative"
+                      onMouseEnter={() => setHoveredCard(`mode-${id}`)}
+                      onMouseLeave={() => setHoveredCard(null)}
                     >
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
-                        style={{ transform: mode === m.id ? 'scaleX(1)' : 'scaleX(0)' }} 
-                      />
-                      <span className="text-xl block mb-2">{m.emoji}</span>
-                      <span className="text-sm font-semibold block mb-1">{m.label}</span>
-                      <span className="text-[11px] text-white/40">{m.desc}</span>
-                    </button>
+                      <button
+                        onClick={() => setMode(id as typeof mode)}
+                        className={`relative w-full p-4 rounded-2xl text-center transition-all duration-300 ${
+                          mode === id ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07] active:scale-95'
+                        } border`}
+                      >
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
+                          style={{ transform: mode === id ? 'scaleX(1)' : 'scaleX(0)' }} 
+                        />
+                        <span className={`text-2xl font-bold block mb-1 transition-all ${mode === id ? 'text-[#f5c518] glow-gold-text' : 'text-white/30'}`}>
+                          {config.number}
+                        </span>
+                        <span className="text-[9px] tracking-widest uppercase text-white/40">{config.label}</span>
+                        {/* Silent checkmark for active mode - NO POPUP */}
+                        {mode === id && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center"
+                          >
+                            <span className="text-xs text-black">✓</span>
+                          </motion.div>
+                        )}
+                      </button>
+                      
+                      {/* Hover Preview */}
+                      <AnimatePresence>
+                        {hoveredCard === `mode-${id}` && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 5 }}
+                            className="absolute z-10 top-full left-0 right-0 mt-2 p-3 glass rounded-xl text-[11px] text-white/60"
+                          >
+                            <span className="text-[9px] text-[#ff6b35] uppercase tracking-wide">{config.tag}</span>
+                            <p className="mt-1">{config.preview}</p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   ))}
                 </div>
               </motion.section>
-
-              {/* Variant/Tone Section - Interactive Cards with Hover Preview */}
-              <AnimatePresence mode="wait">
-                {mode === 'base' ? (
-                  <motion.section 
-                    key="variant"
-                    className="mb-6"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
-                      <span className="w-4 h-px bg-white/10" />
-                      Variant
-                    </p>
-                    <div className="grid grid-cols-3 gap-3">
-                      {MODE_CARDS.map((v) => (
-                        <div
-                          key={v.id}
-                          className="relative"
-                          onMouseEnter={() => setHoveredCard(`variant-${v.id}`)}
-                          onMouseLeave={() => setHoveredCard(null)}
-                        >
-                          <button
-                            onClick={() => setVariant(v.id as typeof variant)}
-                            className={`relative w-full p-4 rounded-2xl text-center transition-all duration-300 ${
-                              variant === v.id ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07] active:scale-95'
-                            } border`}
-                          >
-                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
-                              style={{ transform: variant === v.id ? 'scaleX(1)' : 'scaleX(0)' }} 
-                            />
-                            <span className={`text-2xl font-bold block mb-1 transition-all ${variant === v.id ? 'text-[#f5c518] glow-gold-text' : 'text-white/30'}`}>
-                              {v.number}
-                            </span>
-                            <span className="text-[9px] tracking-widest uppercase text-white/40">{v.label}</span>
-                          </button>
-                          
-                          {/* Hover Preview */}
-                          <AnimatePresence>
-                            {hoveredCard === `variant-${v.id}` && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 5 }}
-                                className="absolute z-10 top-full left-0 right-0 mt-2 p-3 glass rounded-xl text-[11px] text-white/60"
-                              >
-                                <span className="text-[9px] text-[#ff6b35] uppercase tracking-wide">{v.tag}</span>
-                                <p className="mt-1">{v.preview}</p>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.section>
-                ) : (
-                  <motion.section 
-                    key="tone"
-                    className="mb-6"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <p className="text-[10px] tracking-widest uppercase text-white/40 mb-3 flex items-center gap-2">
-                      <span className="w-4 h-px bg-white/10" />
-                      Tone
-                    </p>
-                    <div className="grid grid-cols-3 gap-3">
-                      {TONE_CARDS.map((t) => (
-                        <div
-                          key={t.id}
-                          className="relative"
-                          onMouseEnter={() => setHoveredCard(`tone-${t.id}`)}
-                          onMouseLeave={() => setHoveredCard(null)}
-                        >
-                          <button
-                            onClick={() => setTone(t.id as typeof tone)}
-                            className={`relative w-full p-4 rounded-2xl text-center transition-all duration-300 ${
-                              tone === t.id ? 'bg-white/10 border-[#f5c518]/50' : 'bg-white/5 border-white/5 hover:bg-white/[0.07] active:scale-95'
-                            } border`}
-                          >
-                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-gold transform origin-left transition-transform duration-300" 
-                              style={{ transform: tone === t.id ? 'scaleX(1)' : 'scaleX(0)' }} 
-                            />
-                            <span className="text-2xl block mb-1">{t.emoji}</span>
-                            <span className="text-[9px] tracking-widest uppercase text-white/40">{t.label}</span>
-                          </button>
-                          
-                          <AnimatePresence>
-                            {hoveredCard === `tone-${t.id}` && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 5 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 5 }}
-                                className="absolute z-10 top-full left-0 right-0 mt-2 p-3 glass rounded-xl text-[11px] text-white/60"
-                              >
-                                <span className="text-[9px] text-[#ff6b35] uppercase tracking-wide">{t.tag}</span>
-                                <p className="mt-1">{t.preview}</p>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.section>
-                )}
-              </AnimatePresence>
 
               {/* Modules Section - Toggleable */}
               <motion.section 
@@ -1035,45 +1220,171 @@ export default function MarkyPromptBuilder() {
                   <span className="w-4 h-px bg-white/10" />
                   Modules · Toggle to customize
                 </p>
-                <div className="space-y-2">
-                  {Object.values(PROMPT_MODULES).map((mod) => (
-                    <button
-                      key={mod.id}
-                      onClick={() => toggleModule(mod.id)}
-                      className={`w-full p-4 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
-                        modules[mod.id] 
-                          ? 'bg-white/10 border-[#f5c518]/30' 
-                          : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
-                      } border`}
-                    >
-                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
-                        modules[mod.id] 
-                          ? 'bg-[#f5c518] border-[#f5c518]' 
-                          : 'border-white/20'
-                      }`}>
-                        {modules[mod.id] && (
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="text-black text-xs"
-                          >
-                            ✓
-                          </motion.span>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <span className={`text-sm font-medium block ${modules[mod.id] ? 'text-white' : 'text-white/50'}`}>
-                          {mod.label}
-                        </span>
-                        <span className="text-[10px] text-white/30">{mod.description}</span>
-                      </div>
-                      {mod.id.startsWith('+') && (
+                
+                {/* Core Modules */}
+                <div className="space-y-2 mb-4">
+                  <p className="text-[9px] text-white/30 uppercase tracking-wide">Core</p>
+                  {Object.values(PROMPT_MODULES)
+                    .filter(m => m.category === 'core')
+                    .map((mod) => (
+                      <button
+                        key={mod.id}
+                        onClick={() => toggleModule(mod.id)}
+                        className={`w-full p-4 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
+                          modules[mod.id] 
+                            ? 'bg-white/10 border-[#f5c518]/30' 
+                            : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
+                        } border`}
+                      >
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                          modules[mod.id] 
+                            ? 'bg-[#f5c518] border-[#f5c518]' 
+                            : 'border-white/20'
+                        }`}>
+                          {modules[mod.id] && (
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-black text-xs"
+                            >
+                              ✓
+                            </motion.span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <span className={`text-sm font-medium block ${modules[mod.id] ? 'text-white' : 'text-white/50'}`}>
+                            {mod.label}
+                          </span>
+                          <span className="text-[10px] text-white/30">{mod.description}</span>
+                        </div>
+                      </button>
+                    ))}
+                </div>
+                
+                {/* Add-on Modules */}
+                <div className="space-y-2 mb-4">
+                  <p className="text-[9px] text-white/30 uppercase tracking-wide">Add-ons</p>
+                  {Object.values(PROMPT_MODULES)
+                    .filter(m => m.category === 'addon')
+                    .map((mod) => (
+                      <button
+                        key={mod.id}
+                        onClick={() => toggleModule(mod.id)}
+                        className={`w-full p-4 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
+                          modules[mod.id] 
+                            ? 'bg-white/10 border-[#ff6b35]/30' 
+                            : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
+                        } border`}
+                      >
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                          modules[mod.id] 
+                            ? 'bg-[#ff6b35] border-[#ff6b35]' 
+                            : 'border-white/20'
+                        }`}>
+                          {modules[mod.id] && (
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-black text-xs"
+                            >
+                              ✓
+                            </motion.span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <span className={`text-sm font-medium block ${modules[mod.id] ? 'text-white' : 'text-white/50'}`}>
+                            {mod.label}
+                          </span>
+                          <span className="text-[10px] text-white/30">{mod.description}</span>
+                        </div>
                         <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#ff6b35]/20 text-[#ff6b35]">
                           ADD-ON
                         </span>
-                      )}
-                    </button>
-                  ))}
+                      </button>
+                    ))}
+                </div>
+                
+                {/* Skill Modules */}
+                <div className="space-y-2">
+                  <p className="text-[9px] text-white/30 uppercase tracking-wide">Skills</p>
+                  {Object.values(PROMPT_MODULES)
+                    .filter(m => m.category === 'skill')
+                    .map((mod) => (
+                      <button
+                        key={mod.id}
+                        onClick={() => toggleModule(mod.id)}
+                        className={`w-full p-4 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
+                          modules[mod.id] 
+                            ? 'bg-white/10 border-[#76b900]/30' 
+                            : 'bg-white/5 border-white/5 hover:bg-white/[0.07]'
+                        } border`}
+                      >
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                          modules[mod.id] 
+                            ? 'bg-[#76b900] border-[#76b900]' 
+                            : 'border-white/20'
+                        }`}>
+                          {modules[mod.id] && (
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-black text-xs"
+                            >
+                              ✓
+                            </motion.span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <span className={`text-sm font-medium block ${modules[mod.id] ? 'text-white' : 'text-white/50'}`}>
+                            {mod.label}
+                          </span>
+                          <span className="text-[10px] text-white/30">{mod.description}</span>
+                        </div>
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#76b900]/20 text-[#76b900]">
+                          SKILL
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </motion.section>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Output Section - Always Visible */}
+        <motion.section 
+          className="mb-6"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.07]:bg-white/5 border-white/5 hover:bg-white/[0.07]'
+                        } border`}
+                      >
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                          modules[mod.id] 
+                            ? 'bg-[#76b900] border-[#76b900]' 
+                            : 'border-white/20'
+                        }`}>
+                          {modules[mod.id] && (
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="text-black text-xs"
+                            >
+                              ✓
+                            </motion.span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <span className={`text-sm font-medium block ${modules[mod.id] ? 'text-white' : 'text-white/50'}`}>
+                            {mod.label}
+                          </span>
+                          <span className="text-[10px] text-white/30">{mod.description}</span>
+                        </div>
+                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#76b900]/20 text-[#76b900]">
+                          SKILL
+                        </span>
+                      </button>
+                    ))}
                 </div>
               </motion.section>
             </motion.div>
@@ -1102,7 +1413,7 @@ export default function MarkyPromptBuilder() {
             </div>
           </div>
           <div className="glass rounded-2xl p-5">
-            <pre className="font-mono text-[11px] leading-relaxed text-white/60 whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto">
+            <pre className="font-mono text-[11px] leading-relaxed text-white/60 whitespace-pre-wrap break-words max-h-[250px] overflow-y-auto">
               {buildPrompt()}
             </pre>
           </div>
@@ -1121,9 +1432,9 @@ export default function MarkyPromptBuilder() {
           </p>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Base Mode', text: 'Code · Strategy · Research' },
-              { label: 'Copywriting', text: 'Captions · Emails · Sales' },
-              { label: 'Pro Tip', text: 'Paste at top of GLM chat' }
+              { label: 'Master', text: 'Full system prompt' },
+              { label: 'GLM', text: 'Optimized for GLM' },
+              { label: 'Concise', text: 'Minimal tokens' }
             ].map((tip, i) => (
               <div key={i} className="bg-white/5 border border-white/5 rounded-xl p-3">
                 <span className="text-[9px] tracking-widest uppercase text-[#f5c518] block mb-1 font-semibold">{tip.label}</span>
@@ -1140,18 +1451,25 @@ export default function MarkyPromptBuilder() {
           {/* Secondary Actions Row */}
           <div className="flex gap-2 mb-3">
             <motion.button
-              onClick={() => copyToClipboard(true)}
+              onClick={() => copyToClipboard('plain')}
               className="flex-1 py-2.5 rounded-xl font-medium text-xs transition-all duration-300 bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
               whileTap={{ scale: 0.98 }}
             >
-              {copiedMd ? '✓ Copied MD!' : '📋 Markdown'}
+              {copiedPlain ? '✓ Copied!' : '📄 Plain Text'}
             </motion.button>
             <motion.button
-              onClick={copyUrlToClipboard}
+              onClick={() => copyToClipboard('markdown')}
               className="flex-1 py-2.5 rounded-xl font-medium text-xs transition-all duration-300 bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
               whileTap={{ scale: 0.98 }}
             >
-              🔗 Copy URL
+              {copiedMd ? '✓ Copied!' : '📋 Markdown'}
+            </motion.button>
+            <motion.button
+              onClick={() => copyToClipboard('url')}
+              className="flex-1 py-2.5 rounded-xl font-medium text-xs transition-all duration-300 bg-white/5 border border-white/10 text-white/70 hover:bg-white/10"
+              whileTap={{ scale: 0.98 }}
+            >
+              🔗 URL
             </motion.button>
             <motion.button
               onClick={savePrompt}
@@ -1164,7 +1482,7 @@ export default function MarkyPromptBuilder() {
           
           {/* Primary Action */}
           <motion.button
-            onClick={() => copyToClipboard(false)}
+            onClick={() => copyToClipboard('plain')}
             className={`w-full py-4 rounded-2xl font-semibold text-base tracking-wide relative overflow-hidden transition-all duration-300 ${
               copied ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gradient-gold'
             } text-black`}
@@ -1190,14 +1508,21 @@ export default function MarkyPromptBuilder() {
       <AnimatePresence>
         {presetModalOpen && (
           <PresetModal
-            isOpen={presetModalOpen}
-            onClose={() => setPresetModalOpen(false)}
-            onSave={savePreset}
-            onLoad={loadPreset}
-            presets={presets}
-          />
-        )}
-      </AnimatePresence>
+              isOpen={presetModalOpen}
+              onClose={() => setPresetModalOpen(false)}
+              onSave={savePreset}
+              onLoad={loadPreset}
+              presets={presets}
+            />
+          )}
+          {nvidiaPanelOpen && (
+            <NvidiaPanel
+              isOpen={nvidiaPanelOpen}
+              onClose={() => setNvidiaPanelOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }
